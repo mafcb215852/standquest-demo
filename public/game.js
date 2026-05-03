@@ -212,6 +212,35 @@ function draw() {
         ctx.fillRect(0, 0, canvas.width, canvas.height);
     }
 
+    // ==================== 繪製答題區域 ====================
+    if (currentQuestion && currentQuestion.zones) {
+        const zones = currentQuestion.zones;
+        
+        // 繪製每個區域的彩色背景
+        zones.forEach(function(zone, index) {
+            ctx.fillStyle = zone.color || 'rgba(128, 128, 128, 0.3)';
+            ctx.fillRect(zone.x, zone.y, zone.width, zone.height);
+            
+            // 區域邊框
+            ctx.strokeStyle = '#fff';
+            ctx.lineWidth = 2;
+            ctx.setLineDash([5, 5]);
+            ctx.strokeRect(zone.x, zone.y, zone.width, zone.height);
+            ctx.setLineDash([]);
+            
+            // 區域標籤（A、B、C）
+            const labels = ['A', 'B', 'C'];
+            ctx.fillStyle = '#fff';
+            ctx.font = 'bold 36px Arial';
+            ctx.textAlign = 'center';
+            ctx.fillText(labels[index], zone.x + zone.width / 2, zone.y + zone.height / 2 - 10);
+            
+            // 區域名稱
+            ctx.font = 'bold 18px Arial';
+            ctx.fillText(zone.name, zone.x + zone.width / 2, zone.y + zone.height / 2 + 30);
+        });
+    }
+
     players.forEach(function(p) {
         ctx.beginPath();
         ctx.arc(p.x, p.y, 15, 0, Math.PI * 2);
