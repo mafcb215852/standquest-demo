@@ -16,6 +16,36 @@
         .login-box { background: #444; padding: 20px; border-radius: 10px; text-align: center; }
         input { padding: 10px; font-size: 16px; margin-bottom: 10px; width: 200px; display: block; }
         button { padding: 10px 20px; font-size: 16px; cursor: pointer; background: #28a745; color: white; border: none; border-radius: 5px; }
+
+        /* 虛擬搖桿樣式 */
+        #joystick-container {
+            position: fixed;
+            bottom: 30px;
+            left: 30px;
+            width: 120px;
+            height: 120px;
+            display: none; /* 預設隱藏，手機版顯示 */
+            z-index: 5;
+        }
+        #joystick-base {
+            position: absolute;
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.15);
+            border: 3px solid rgba(255, 255, 255, 0.3);
+        }
+        #joystick-handle {
+            position: absolute;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.6);
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            cursor: pointer;
+        }
     </style>
 </head>
 <body>
@@ -33,6 +63,13 @@
     </div>
 
     <canvas id="gameCanvas" width="800" height="600"></canvas>
+
+    <!-- 虛擬搖桿 -->
+    <div id="joystick-container">
+        <div id="joystick-base">
+            <div id="joystick-handle"></div>
+        </div>
+    </div>
 
     <!-- Socket.io Client Library -->
     <script src="/socket.io/socket.io.js"></script>

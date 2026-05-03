@@ -6,6 +6,11 @@ const loginOverlay = document.getElementById('login-overlay');
 const joinBtn = document.getElementById('join-btn');
 const nicknameInput = document.getElementById('nickname-input');
 
+// 虛擬搖桿元素
+const joystickContainer = document.getElementById('joystick-container');
+const joystickBase = document.getElementById('joystick-base');
+const joystickHandle = document.getElementById('joystick-handle');
+
 let players = [];
 let myId = null;
 let myPosition = { x: 400, y: 300 };
@@ -13,6 +18,11 @@ let keys = {};
 let gameState = 'LOBBY';
 let currentQuestion = null;
 let timeLeft = 0;
+
+// 虛擬搖桿狀態
+let joystickActive = false;
+let joystickDirection = { x: 0, y: 0 }; // -1 到 1 之間的值
+const JOYSTICK_MAX_RADIUS = 35; // 控制柄最大移動半徑
 
 if (joinBtn) {
     joinBtn.addEventListener('click', function() {
@@ -22,6 +32,121 @@ if (joinBtn) {
         if (loginOverlay) loginOverlay.style.display = 'none';
     });
 }
+
+// ==================== 虛擬搖桿功能 ====================
+
+/**
+ * 檢測是否為觸控裝置
+ */
+function isTouchDevice() {
+    return 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+}
+
+/**
+ * 初始化虛擬搖桿（僅在觸控裝置上）
+ */
+function initJoystick() {
+    if (!isTouchDevice()) {
+        joystickContainer.style.display = 'none';
+        return;
+    }
+
+    // 顯示虛擬搖桿
+    joystickContainer.style.display = 'block';
+
+    let startX, startY;
+
+    /**
+     * 處理搖桿開始觸控
+     */
+    function handleTouchStart(e) {
+        e.preventDefault();
+        const touch = e.touches[0];
+        startX = touch.clientX;
+        startY = touch.clientY;
+        joystickActive = true;
+        updateJoystickPosition(touch.clientX, touch.clientY);
+    }
+
+    /**
+     * 處理搖桿移動觸控
+     */
+    function handleTouchMove(e) {
+        e.preventDefault();
+        if (!joystickActive) return;
+        const touch = e.touches[0];
+        updateJoystickPosition(touch.clientX, touch.clientY);
+    }
+
+    /**
+     * 處理搖桿結束觸控
+     */
+    function handleTouchEnd(e) {
+        e.preventDefault();
+        joystickActive = false;
+        joystickDirection = { x: 0, y: 0 };
+        // 重置控制柄位置
+        joystickHandle.style.left = '50%';
+        joystickHandle.style.top = '50%';
+    }
+
+    /**
+     * 更新控制柄位置並計算方向
+     */
+    function updateJoystickPosition(clientX, clientY) {
+        const rect = joystickBase.getBoundingClientRect();
+        const centerX = rect.left + rect.width / 2;
+        const centerY = rect.top + rect.height / 2;
+
+        let dx = clientX - centerX;
+        let dy = clientY - centerY;
+
+        // 計算距離並限制在最大半徑內
+        const distance = Math.sqrt(dx * dx + dy * dy);
+        if (distance > JOYSTICK_MAX_RADIUS) {
+            dx = (dx / distance) * JOYSTICK_MAX_RADIUS;
+            dy = (dy / distance) * JOYSTICK_MAX_RADIUS;
+        }
+
+        // 更新控制柄視覺位置
+        joystickHandle.style.left = `calc(50% + ${dx}px)`;
+        joystickHandle.style.top = `calc(50% + ${dy}px)`;
+
+        // 計算方向向量（-1 到 1）
+        joystickDirection.x = dx / JOYSTICK_MAX_RADIUS;
+        joystickDirection.y = dy / JOYSTICK_MAX_RADIUS;
+    }
+
+    // 綁定事件監聽器
+    joystickBase.addEventListener('touchstart', handleTouchStart, { passive: false });
+    joystickBase.addEventListener('touchmove', handleTouchMove, { passive: false });
+    joystickBase.addEventListener('touchend', handleTouchEnd, { passive: false });
+    joystickBase.addEventListener('touchcancel', handleTouchEnd, { passive: false });
+
+    // 也支援滑鼠測試（開發用）
+    let mouseDown = false;
+    joystickBase.addEventListener('mousedown', (e) => {
+        mouseDown = true;
+        joystickActive = true;
+        updateJoystickPosition(e.clientX, e.clientY);
+    });
+    window.addEventListener('mousemove', (e) => {
+        if (!mouseDown || !joystickActive) return;
+        updateJoystickPosition(e.clientX, e.clientY);
+    });
+    window.addEventListener('mouseup', () => {
+        mouseDown = false;
+        joystickActive = false;
+        joystickDirection = { x: 0, y: 0 };
+        joystickHandle.style.left = '50%';
+        joystickHandle.style.top = '50%';
+    });
+
+    console.log('🎮 虛擬搖桿已啟用');
+}
+
+// 初始化搖桿
+initJoystick();
 
 window.addEventListener('keydown', function(e) { keys[e.code] = true; });
 window.addEventListener('keyup', function(e) { keys[e.code] = false; });
@@ -47,11 +172,21 @@ function update() {
     if (!myId || gameState !== 'QUESTION_ACTIVE') return;
     let moved = false;
     const speed = 4;
+    
+    // PC 鍵盤控制
     if (keys['KeyW'] || keys['ArrowUp'])    { myPosition.y -= speed; moved = true; }
     if (keys['KeyS'] || keys['ArrowDown'])  { myPosition.y += speed; moved = true; }
     if (keys['KeyA'] || keys['ArrowLeft'])  { myPosition.x -= speed; moved = true; }
     if (keys['KeyD'] || keys['ArrowRight']) { myPosition.x += speed; moved = true; }
+    
+    // 虛擬搖桿控制（與鍵盤輸入合併）
+    if (joystickActive && (Math.abs(joystickDirection.x) > 0.1 || Math.abs(joystickDirection.y) > 0.1)) {
+        myPosition.x += joystickDirection.x * speed;
+        myPosition.y += joystickDirection.y * speed;
+        moved = true;
+    }
 
+    // 邊界檢查
     if (myPosition.x < 15) myPosition.x = 15;
     if (myPosition.y < 15) myPosition.y = 15;
     if (myPosition.x > canvas.width - 15) myPosition.x = canvas.width - 15;
