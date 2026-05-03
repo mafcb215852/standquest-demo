@@ -142,7 +142,11 @@ io.on('connection', (socket) => {
     });
 
     socket.on('player_move', (data) => {
-        if (players[socket.id] && gameState === 'QUESTION_ACTIVE') {
+        if (!players[socket.id]) return;
+        
+        // 只有在 QUESTION_ACTIVE 狀態才允許移動（LOBBY 階段自由閒逛，FREEZING 凍結）
+        const canMove = gameState === 'QUESTION_ACTIVE';
+        if (canMove) {
             players[socket.id].x = data.x;
             players[socket.id].y = data.y;
             io.emit('update_players', Object.values(players));

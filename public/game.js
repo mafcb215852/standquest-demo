@@ -169,15 +169,20 @@ socket.on('timer_tick', function(d) {
 });
 
 function update() {
-    if (!myId || gameState !== 'QUESTION_ACTIVE') return;
+    if (!myId) return;
+    
+    // 只有在 QUESTION_ACTIVE 狀態才允許移動（LOBBY 階段自由閒逛，FREEZING 凍結）
+    const canMove = gameState === 'QUESTION_ACTIVE';
     let moved = false;
     const speed = 4;
     
     // PC 鍵盤控制
-    if (keys['KeyW'] || keys['ArrowUp'])    { myPosition.y -= speed; moved = true; }
-    if (keys['KeyS'] || keys['ArrowDown'])  { myPosition.y += speed; moved = true; }
-    if (keys['KeyA'] || keys['ArrowLeft'])  { myPosition.x -= speed; moved = true; }
-    if (keys['KeyD'] || keys['ArrowRight']) { myPosition.x += speed; moved = true; }
+    if (canMove) {
+        if (keys['KeyW'] || keys['ArrowUp'])    { myPosition.y -= speed; moved = true; }
+        if (keys['KeyS'] || keys['ArrowDown'])  { myPosition.y += speed; moved = true; }
+        if (keys['KeyA'] || keys['ArrowLeft'])  { myPosition.x -= speed; moved = true; }
+        if (keys['KeyD'] || keys['ArrowRight']) { myPosition.x += speed; moved = true; }
+    }
     
     // 虛擬搖桿控制（與鍵盤輸入合併）
     if (joystickActive && (Math.abs(joystickDirection.x) > 0.1 || Math.abs(joystickDirection.y) > 0.1)) {
