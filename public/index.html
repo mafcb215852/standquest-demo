@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>StandQuest Demo</title>
+    <style>
+        body { margin: 0; overflow: hidden; background: #222; font-family: sans-serif; color: white; }
+        canvas { display: block; background: #333; margin: auto; border: 2px solid #555; }
+        #ui { position: absolute; top: 10px; left: 10px; pointer-events: none; }
+        #login-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.8); display: flex; justify-content: center; align-items: center;
+            z-index: 10;
+        }
+        .login-box { background: #444; padding: 20px; border-radius: 10px; text-align: center; }
+        input { padding: 10px; font-size: 16px; margin-bottom: 10px; width: 200px; display: block; }
+        button { padding: 10px 20px; font-size: 16px; cursor: pointer; background: #28a745; color: white; border: none; border-radius: 5px; }
+    </style>
+</head>
+<body>
+
+    <div id="login-overlay">
+        <div class="login-box">
+            <h3>進入 StandQuest</h3>
+            <input type="text" id="nickname-input" placeholder="輸入你的暱稱..." maxlength="15">
+            <button id="join-btn">開始遊戲</button>
+        </div>
+    </div>
+
+    <div id="ui">
+        <div id="player-count">玩家人數: 0</div>
+    </div>
+
+    <canvas id="gameCanvas" width="800" height="600"></canvas>
+
+    <!-- Socket.io Client Library -->
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="game.js"></script>
+</body>
+</html>

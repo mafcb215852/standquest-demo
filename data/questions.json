@@ -1,0 +1,23 @@
+[
+  {
+    "id": "q1",
+    "questionText": "請問今晚的主角（新郎）最喜歡的食物是？",
+    "options": ["珍珠奶茶", "滷肉飯", "炸雞"],
+    "correctIndex": 1,
+    "timeLimit": 15
+  },
+  {
+    "id": "q2",
+    "questionText": "這場婚禮的主題顏色是哪一種？",
+    "options": ["粉紅色", "香槟金", "純白色"],
+    "correctIndex": 1,
+    "timeLimit": 10
+  },
+  {
+    "id": "crc_test",
+    "questionText": "這是一個測試題：1 + 1 = ?",
+    "options": ["1", "2", "3"],
+    "correctIndex": 1,
+    "timeLimit": 5
+  }
+]
