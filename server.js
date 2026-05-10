@@ -25,6 +25,31 @@ const ZONES = [
 // Re-fix ZONES color string typo (argba -> rgba)
 ZONES[2].color = 'rgba(0, 0, 255, 0.3)';
 
+// 根據題目選項數量動態生成 zones
+function getZonesForQuestion(question) {
+    const optCount = question.options ? question.options.length : 3;
+    const zoneCount = Math.min(Math.max(optCount, 2), 3); // 最少 2，最多 3
+    const zones = [];
+    const zoneWidth = 800 / zoneCount;
+    const baseZones = [
+        { name: 'Zone A', color: 'rgba(255, 0, 0, 0.3)' },
+        { name: 'Zone B', color: 'rgba(0, 255, 0, 0.3)' },
+        { name: 'Zone C', color: 'rgba(0, 0, 255, 0.3)' }
+    ];
+    for (let i = 0; i < zoneCount; i++) {
+        zones.push({
+            id: i,
+            name: baseZones[i].name,
+            x: i * zoneWidth,
+            y: 400,
+            width: zoneWidth,
+            height: 200,
+            color: baseZones[i].color
+        });
+    }
+    return zones;
+}
+
 // --- Game State ---
 let questions = [];
 let currentQuestionIndex = -1;
@@ -78,7 +103,7 @@ function startNextQuestion() {
 
     // Broadcast state change and new question to all clients
     io.emit('game_state_toggled', { state: gameState });
-    io.emit('new_question', { ...question, zones: ZONES });
+    io.emit('new_question', { ...question, zones: getZonesForQuestion(question) });
     io.emit('update_players', Object.values(players));
     broadcastGMStatus();
 
@@ -104,10 +129,10 @@ function handleTimerEnd() {
     // 1. Evaluate Scores
     const currentQ = questions[currentQuestionIndex];
     const correctZoneId = currentQ.correctIndex;
-    const targetZone = ZONES[correctZoneId];
+    const targetZone = getZonesForQuestion(currentQ)[correctZoneId];
     let winnersCount = 0;
 
-    // 如果 correctIndex 超出 ZONES 範圍，跳過評分
+    // 如果 correctIndex 超出動態 zones 範圍，跳過評分
     if (targetZone) {
         Object.values(players).forEach(player => {
             if (player.x >= targetZone.x && 
@@ -119,7 +144,7 @@ function handleTimerEnd() {
             }
         });
     } else {
-        console.warn(`⚠️ correctIndex ${correctZoneId} 超出 ZONES 範圍 (${ZONES.length} 個區域)，無法評分`);
+        console.warn(`⚠️ correctIndex ${correctZoneId} 超出動態 zones 範圍 (${getZonesForQuestion(currentQ).length} 個區域)，無法評分`);
     }
 
     // 2. Broadcast Verdict
