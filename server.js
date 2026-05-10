@@ -58,6 +58,7 @@ let timeLeft = 0;
 let originalTimeLimit = 0;
 let timerInterval = null;
 let resultTimeout = null;
+let scoringInterval = null;
 const players = {};
 
 // --- Broadcast GM status to all connected clients ---
@@ -68,7 +69,16 @@ function broadcastGMStatus() {
         currentQuestion: currentQuestionIndex >= 0 ? questions[currentQuestionIndex] : null,
         totalQuestions: questions.length,
         playerCount: Object.keys(players).length,
-        timeLeft: gameState === 'QUESTION_ACTIVE' ? timeLeft : 0
+        timeLeft: gameState === 'QUESTION_ACTIVE' ? timeLeft : 0,
+        players: Object.values(players).map(p => ({
+            id: p.id,
+            nickname: p.nickname,
+            x: p.x,
+            y: p.y,
+            color: p.color,
+            score: p.score,
+            hiddenScore: p.hiddenScore || 0
+        }))
     });
 }
 
@@ -98,6 +108,10 @@ function startNextQuestion() {
     timeLeft = question.timeLimit;
     originalTimeLimit = question.timeLimit;
     if (resultTimeout) { clearTimeout(resultTimeout); resultTimeout = null; }
+    if (scoringInterval) { clearInterval(scoringInterval); scoringInterval = null; }
+
+    // 重置所有玩家的隱藏積分
+    Object.values(players).forEach(p => { p.hiddenScore = 0; });
 
     console.log(`🚀 Starting Question: ${question.questionText}`);
 
@@ -116,11 +130,33 @@ function startNextQuestion() {
             handleTimerEnd();
         }
     }, 1000);
+
+    // 隱藏積分計時器：每 0.5 秒檢查
+    if (scoringInterval) clearInterval(scoringInterval);
+    scoringInterval = setInterval(() => {
+        if (gameState !== 'QUESTION_ACTIVE') return;
+        const currentQ = questions[currentQuestionIndex];
+        const correctZoneId = currentQ.correctIndex;
+        const correctZone = getZonesForQuestion(currentQ)[correctZoneId];
+        if (!correctZone) return;
+
+        Object.values(players).forEach(player => {
+            if (player.x >= correctZone.x && 
+                player.x <= correctZone.x + correctZone.width &&
+                player.y >= correctZone.y && 
+                player.y <= correctZone.y + correctZone.height) {
+                player.hiddenScore = (player.hiddenScore || 0) + 1;
+            }
+        });
+        // 廣播更新玩家狀態（GM 可以看到隱藏積分）
+        io.emit('update_players', Object.values(players));
+    }, 500);
 }
 
 function handleTimerEnd() {
     clearInterval(timerInterval);
     timerInterval = null;
+    if (scoringInterval) { clearInterval(scoringInterval); scoringInterval = null; }
     gameState = 'FREEZING';
     io.emit('game_state_toggled', { state: gameState });
     broadcastGMStatus();
@@ -135,16 +171,26 @@ function handleTimerEnd() {
     // 如果 correctIndex 超出動態 zones 範圍，跳過評分
     if (targetZone) {
         Object.values(players).forEach(player => {
-            if (player.x >= targetZone.x && 
-                player.x <= targetZone.x + targetZone.width &&
-                player.y >= targetZone.y && 
-                player.y <= targetZone.y + targetZone.height) {
-                player.score = (player.score || 0) + 10;
+            const inZone = player.x >= targetZone.x && 
+                           player.x <= targetZone.x + targetZone.width &&
+                           player.y >= targetZone.y && 
+                           player.y <= targetZone.y + targetZone.height;
+            
+            if (inZone) {
+                // 在正確區域：隱藏積分保留
+                player.score = (player.hiddenScore || 0) + 10;
                 winnersCount++;
+            } else {
+                // 跑出正確區域：隱藏積分除以 2
+                player.score = Math.floor((player.hiddenScore || 0) / 2) + 10;
             }
         });
     } else {
         console.warn(`⚠️ correctIndex ${correctZoneId} 超出動態 zones 範圍 (${getZonesForQuestion(currentQ).length} 個區域)，無法評分`);
+        // 即使 zones 無效，仍然給所有玩家 +10
+        Object.values(players).forEach(player => {
+            player.score = (player.hiddenScore || 0) + 10;
+        });
     }
 
     // 2. Broadcast Verdict
@@ -160,6 +206,17 @@ function handleTimerEnd() {
     resultTimeout = setTimeout(() => {
         gameState = 'RESULT_DISPLAY';
         broadcastGMStatus();
+        // 廣播回合結束，讓玩家看到得分
+        io.emit('result_display', {
+            correctIndex: correctZoneId,
+            winnersCount: winnersCount,
+            players: Object.values(players).map(p => ({
+                id: p.id,
+                nickname: p.nickname,
+                score: p.score,
+                hiddenScore: p.hiddenScore || 0
+            }))
+        });
         // 在 RESULT_DISPLAY 停留 4 秒後自動下一題
         setTimeout(() => {
             startNextQuestion();
@@ -300,7 +357,7 @@ app.post('/api/gm/freeze', (req, res) => {
 
 // POST /api/gm/clear-scores — 清空所有玩家分數
 app.post('/api/gm/clear-scores', (req, res) => {
-    Object.values(players).forEach(p => { p.score = 0; });
+    Object.values(players).forEach(p => { p.score = 0; p.hiddenScore = 0; });
     io.emit('update_players', Object.values(players));
     broadcastGMStatus();
     console.log('🗑 Scores cleared');
@@ -342,10 +399,11 @@ app.post('/api/gm/reset', (req, res) => {
     clearInterval(timerInterval);
     timerInterval = null;
     if (resultTimeout) { clearTimeout(resultTimeout); resultTimeout = null; }
+    if (scoringInterval) { clearInterval(scoringInterval); scoringInterval = null; }
     currentQuestionIndex = -1;
     gameState = 'LOBBY';
     timeLeft = 0;
-    Object.values(players).forEach(p => { p.score = 0; });
+    Object.values(players).forEach(p => { p.score = 0; p.hiddenScore = 0; });
     io.emit('game_state_toggled', { state: gameState });
     io.emit('update_players', Object.values(players));
     io.emit('gm_reset', { message: '遊戲已重置' });

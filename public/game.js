@@ -168,6 +168,43 @@ socket.on('timer_tick', function(d) {
     timeLeft = d.timeLeft;
 });
 
+// 隱藏積分事件處理
+let verdictData = null;
+let resultDisplayTimer = null;
+
+socket.on('verdict_reveal', function(data) {
+    verdictData = data;
+});
+
+socket.on('result_display', function(data) {
+    // 回合結束，顯示得分
+    if (resultDisplayTimer) clearTimeout(resultDisplayTimer);
+    const myPlayer = players.find(p => p.id === socket.id);
+    if (myPlayer && verdictData) {
+        const hiddenScore = myPlayer.hiddenScore || 0;
+        const totalScore = myPlayer.score || 0;
+        const inCorrectZone = verdictData.winnersCount > 0;
+        
+        // 在畫面上顯示得分
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
+        ctx.fillRect(250, 200, 300, 150);
+        ctx.strokeStyle = '#ffcc00';
+        ctx.lineWidth = 3;
+        ctx.strokeRect(250, 200, 300, 150);
+        
+        ctx.fillStyle = '#ffcc00';
+        ctx.font = 'bold 28px Arial';
+        ctx.textAlign = 'center';
+        ctx.fillText('回合結束！', 400, 240);
+        
+        ctx.fillStyle = 'white';
+        ctx.font = '20px Arial';
+        ctx.fillText(`隱藏積分: ${hiddenScore}`, 400, 280);
+        ctx.fillText(`基礎分數: +10`, 400, 310);
+        ctx.fillText(`總分: ${totalScore}`, 400, 340);
+    }
+});
+
 function update() {
     if (!myId) return;
     
