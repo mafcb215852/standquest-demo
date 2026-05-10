@@ -363,6 +363,8 @@
     <script>
         const API_BASE = '';
         let gameState = 'LOBBY';
+        let currentQuestionIndex = -1;
+        let totalQuestions = 0;
         let currentQuestion = null;
         let players = [];
         let timeLeft = 0;
@@ -385,6 +387,8 @@
                 const resp = await fetch(`${API_BASE}/api/gm/status`);
                 const data = await resp.json();
                 gameState = data.state;
+                currentQuestionIndex = data.currentQuestionIndex || -1;
+                totalQuestions = data.totalQuestions || 0;
                 currentQuestion = data.currentQuestion;
                 players = data.players;
                 timeLeft = data.timeLeft;
