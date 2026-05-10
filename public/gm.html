@@ -250,6 +250,161 @@
         }
         .timer-controls .btn { padding: 8px 12px; font-size: 12px; }
     </style>
+
+    <!-- 題目排序 Modal -->
+    <style>
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.7);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+        .modal-overlay.active { display: flex; }
+        .modal-container {
+            background: #12122a;
+            border: 1px solid #2a2a5a;
+            border-radius: 16px;
+            width: 700px;
+            max-width: 95vw;
+            max-height: 85vh;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+        }
+        .modal-header {
+            padding: 20px 24px;
+            border-bottom: 1px solid #2a2a5a;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .modal-header h2 {
+            font-size: 20px;
+            color: #c9a0ff;
+        }
+        .modal-close {
+            background: none;
+            border: none;
+            color: #8888aa;
+            font-size: 24px;
+            cursor: pointer;
+            padding: 4px 8px;
+        }
+        .modal-close:hover { color: #e0e0e0; }
+        .modal-body {
+            padding: 20px 24px;
+            overflow-y: auto;
+            flex: 1;
+        }
+        .modal-footer {
+            padding: 16px 24px;
+            border-top: 1px solid #2a2a5a;
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+        }
+        .question-drag-item {
+            background: #0e0e22;
+            border: 2px solid #2a2a5a;
+            border-radius: 10px;
+            padding: 12px 16px;
+            margin-bottom: 8px;
+            cursor: grab;
+            transition: all 0.15s;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            user-select: none;
+        }
+        .question-drag-item:hover { border-color: #6c3baa; }
+        .question-drag-item.dragging {
+            opacity: 0.5;
+            border-color: #fbbf24;
+            transform: scale(0.98);
+        }
+        .question-drag-item.drag-over {
+            border-color: #4ade80;
+            border-style: dashed;
+        }
+        .question-drag-item.current-q {
+            border-color: #fbbf24;
+            background: #1a1a0a;
+        }
+        .question-drag-item.passed-q {
+            border-color: #4ade80;
+            opacity: 0.6;
+        }
+        .drag-handle {
+            color: #6666aa;
+            font-size: 18px;
+            cursor: grab;
+            flex-shrink: 0;
+            padding: 0 4px;
+        }
+        .drag-handle:active { cursor: grabbing; }
+        .q-order {
+            background: #2a2a5a;
+            color: #c9a0ff;
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 13px;
+            font-weight: bold;
+            flex-shrink: 0;
+        }
+        .q-order.current { background: #fbbf24; color: #000; }
+        .q-order.passed { background: #4ade80; color: #000; }
+        .q-preview-text {
+            flex: 1;
+            color: #e0e0e0;
+            font-size: 14px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .q-label {
+            font-size: 11px;
+            padding: 2px 8px;
+            border-radius: 4px;
+            flex-shrink: 0;
+        }
+        .q-label.current { background: #3a2a1a; color: #fbbf24; }
+        .q-label.passed { background: #1a3a1a; color: #4ade80; }
+        .q-label.upcoming { background: #1a2a4a; color: #60a5fa; }
+        .modal-hint {
+            color: #6666aa;
+            font-size: 13px;
+            margin-bottom: 12px;
+            padding: 8px 12px;
+            background: #0e0e22;
+            border-radius: 6px;
+            border: 1px solid #1e1e3e;
+        }
+        .btn-modal {
+            padding: 10px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .btn-modal:hover { transform: translateY(-1px); }
+        .btn-modal-save {
+            background: linear-gradient(135deg, #16a34a, #22c55e);
+            color: white;
+        }
+        .btn-modal-cancel {
+            background: linear-gradient(135deg, #4b5563, #6b7280);
+            color: white;
+        }
+    </style>
 </head>
 <body>
 
@@ -331,6 +486,9 @@
                 <button class="btn btn-warning" onclick="openLeaderboard()">
                     🏆 查看排行榜
                 </button>
+                <button class="btn btn-primary" onclick="openReorderModal()">
+                    🔀 題目排序
+                </button>
             </div>
         </div>
 
@@ -356,6 +514,26 @@
             <h2>📋 操作日誌</h2>
             <div id="log-area" class="log-area">
                 <div class="log-entry info">[系統] GM 控制台已就緒</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 題目排序 Modal -->
+    <div class="modal-overlay" id="reorder-modal">
+        <div class="modal-container">
+            <div class="modal-header">
+                <h2>📋 題目排序</h2>
+                <button class="modal-close" onclick="closeReorderModal()">✕</button>
+            </div>
+            <div class="modal-body">
+                <div class="modal-hint">
+                    🖱️ 拖曳題目卡片調整順序 · 綠色 = 已過 · 黃色 = 目前題目 · 藍色 = 尚未進行
+                </div>
+                <div id="reorder-list"></div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-modal btn-modal-cancel" onclick="closeReorderModal()">取消</button>
+                <button class="btn-modal btn-modal-save" onclick="saveReorder()">💾 儲存排序</button>
             </div>
         </div>
     </div>
@@ -525,6 +703,142 @@
 
         // 初始載入
         updateUI();
+
+        // --- 題目排序 Modal ---
+        let allQuestions = [];
+        let dragSrcEl = null;
+
+        async function openReorderModal() {
+            try {
+                const resp = await fetch(`${API_BASE}/api/gm/questions`);
+                const data = await resp.json();
+                allQuestions = data.questions;
+                renderReorderList();
+                document.getElementById('reorder-modal').classList.add('active');
+            } catch (err) {
+                addLog(`載入題目列表失敗: ${err.message}`, 'error');
+            }
+        }
+
+        function closeReorderModal() {
+            document.getElementById('reorder-modal').classList.remove('active');
+            allQuestions = [];
+        }
+
+        function renderReorderList() {
+            const container = document.getElementById('reorder-list');
+            const currentIdx = currentQuestionIndex;
+
+            container.innerHTML = allQuestions.map((q, i) => {
+                let statusClass = '';
+                let orderClass = '';
+                let labelClass = 'upcoming';
+                let labelText = '待進行';
+
+                if (i < currentIdx) {
+                    statusClass = 'passed-q';
+                    orderClass = 'passed';
+                    labelClass = 'passed';
+                    labelText = '已過';
+                } else if (i === currentIdx) {
+                    statusClass = 'current-q';
+                    orderClass = 'current';
+                    labelClass = 'current';
+                    labelText = '目前';
+                }
+
+                return `
+                    <div class="question-drag-item ${statusClass}" 
+                         draggable="true"
+                         data-id="${q.id}" 
+                         data-index="${i}">
+                        <span class="drag-handle">⠿</span>
+                        <span class="q-order ${orderClass}">${i + 1}</span>
+                        <span class="q-preview-text">${q.questionText}</span>
+                        <span class="q-label ${labelClass}">${labelText}</span>
+                    </div>
+                `;
+            }).join('');
+
+            // 綁定拖放事件
+            container.querySelectorAll('.question-drag-item').forEach(item => {
+                item.addEventListener('dragstart', handleDragStart);
+                item.addEventListener('dragover', handleDragOver);
+                item.addEventListener('dragenter', handleDragEnter);
+                item.addEventListener('dragleave', handleDragLeave);
+                item.addEventListener('drop', handleDrop);
+                item.addEventListener('dragend', handleDragEnd);
+            });
+        }
+
+        function handleDragStart(e) {
+            dragSrcEl = this;
+            this.classList.add('dragging');
+            e.dataTransfer.effectAllowed = 'move';
+            e.dataTransfer.setData('text/plain', this.dataset.id);
+        }
+
+        function handleDragOver(e) {
+            e.preventDefault();
+            e.dataTransfer.dropEffect = 'move';
+        }
+
+        function handleDragEnter(e) {
+            e.preventDefault();
+            this.classList.add('drag-over');
+        }
+
+        function handleDragLeave(e) {
+            this.classList.remove('drag-over');
+        }
+
+        function handleDrop(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            this.classList.remove('drag-over');
+
+            if (dragSrcEl !== this) {
+                const srcId = dragSrcEl.dataset.id;
+                const destId = this.dataset.id;
+                const srcIdx = allQuestions.findIndex(q => q.id === srcId);
+                const destIdx = allQuestions.findIndex(q => q.id === destId);
+
+                // 交換陣列中的位置
+                const [moved] = allQuestions.splice(srcIdx, 1);
+                allQuestions.splice(destIdx, 0, moved);
+
+                renderReorderList();
+            }
+            return false;
+        }
+
+        function handleDragEnd(e) {
+            this.classList.remove('dragging');
+            document.querySelectorAll('.question-drag-item').forEach(item => {
+                item.classList.remove('drag-over');
+            });
+        }
+
+        async function saveReorder() {
+            const order = allQuestions.map(q => q.id);
+            try {
+                const resp = await fetch(`${API_BASE}/api/gm/reorder`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ order: order })
+                });
+                const data = await resp.json();
+                if (resp.ok) {
+                    addLog(`題目順序已更新 (${data.questions.length} 題)`, 'success');
+                    closeReorderModal();
+                    updateUI();
+                } else {
+                    addLog(`排序失敗: ${data.message}`, 'error');
+                }
+            } catch (err) {
+                addLog(`排序失敗: ${err.message}`, 'error');
+            }
+        }
     </script>
 </body>
 </html>

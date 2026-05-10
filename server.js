@@ -326,6 +326,48 @@ app.post('/api/gm/reload', (req, res) => {
     res.json({ message: `已重新載入 ${questions.length} 題題目` });
 });
 
+// GET /api/gm/questions — 取得所有題目列表
+app.get('/api/gm/questions', (req, res) => {
+    res.json({
+        questions: questions.map((q, i) => ({
+            index: i,
+            id: q.id,
+            questionText: q.questionText,
+            options: q.options,
+            correctIndex: q.correctIndex,
+            timeLimit: q.timeLimit
+        })),
+        currentQuestionIndex: currentQuestionIndex
+    });
+});
+
+// POST /api/gm/reorder — 調整題目順序
+app.post('/api/gm/reorder', (req, res) => {
+    const newOrder = req.body.order;
+    if (!Array.isArray(newOrder) || newOrder.length !== questions.length) {
+        return res.status(400).json({ message: '順序資料格式錯誤' });
+    }
+    // 驗證所有 id 都有效
+    const questionIds = new Set(questions.map(q => q.id));
+    for (const id of newOrder) {
+        if (!questionIds.has(id)) {
+            return res.status(400).json({ message: `題目 ID "${id}" 不存在` });
+        }
+    }
+    // 重建題目陣列
+    const reordered = newOrder.map(id => questions.find(q => q.id === id));
+    questions = reordered;
+    // 如果目前題目已超出新陣列範圍，重置
+    if (currentQuestionIndex >= questions.length) {
+        currentQuestionIndex = -1;
+    }
+    // 寫入檔案持久化
+    fs.writeFileSync(QUESTIONS_PATH, JSON.stringify(questions, null, 2));
+    console.log(`🔄 Questions reordered: ${newOrder.join(' → ')}`);
+    broadcastGMStatus();
+    res.json({ message: '題目順序已更新', questions: questions.map(q => ({ id: q.id, questionText: q.questionText })) });
+});
+
 // --- Legacy API (backward compatibility) ---
 // API for GM (Admin Control)
 app.get('/api/game/next', (req, res) => {
