@@ -714,6 +714,7 @@
                         <div style="margin-top: 8px;">
                             <button class="btn btn-secondary" onclick="addFormOption()" style="font-size: 12px; padding: 4px 12px;">＋ 新增選項</button>
                         </div>
+                        <div class="form-hint">提示：只有 3 個遊戲區域（A/B/C），選項最多 3 個</div>
                     </div>
                     <div class="form-row">
                         <div class="form-group">
@@ -1086,6 +1087,14 @@
             }
             if (options.some(o => !o)) {
                 addLog('所有選項都不可為空', 'error');
+                return;
+            }
+            if (options.length < 2) {
+                addLog('至少需要 2 個選項', 'error');
+                return;
+            }
+            if (options.length > 3) {
+                addLog('最多只能有 3 個選項（只有 A/B/C 三個遊戲區域）', 'error');
                 return;
             }
 

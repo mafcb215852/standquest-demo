@@ -104,18 +104,23 @@ function handleTimerEnd() {
     // 1. Evaluate Scores
     const currentQ = questions[currentQuestionIndex];
     const correctZoneId = currentQ.correctIndex;
+    const targetZone = ZONES[correctZoneId];
     let winnersCount = 0;
 
-    Object.values(players).forEach(player => {
-        const targetZone = ZONES[correctZoneId];
-        if (player.x >= targetZone.x && 
-            player.x <= targetZone.x + targetZone.width &&
-            player.y >= targetZone.y && 
-            player.y <= targetZone.y + targetZone.height) {
-            player.score = (player.score || 0) + 10;
-            winnersCount++;
-        }
-    });
+    // 如果 correctIndex 超出 ZONES 範圍，跳過評分
+    if (targetZone) {
+        Object.values(players).forEach(player => {
+            if (player.x >= targetZone.x && 
+                player.x <= targetZone.x + targetZone.width &&
+                player.y >= targetZone.y && 
+                player.y <= targetZone.y + targetZone.height) {
+                player.score = (player.score || 0) + 10;
+                winnersCount++;
+            }
+        });
+    } else {
+        console.warn(`⚠️ correctIndex ${correctZoneId} 超出 ZONES 範圍 (${ZONES.length} 個區域)，無法評分`);
+    }
 
     // 2. Broadcast Verdict
     io.emit('verdict_reveal', {
@@ -124,7 +129,7 @@ function handleTimerEnd() {
     });
     io.emit('update_players', Object.values(players));
 
-    console.log(`✅ Verdict: Zone ${ZONES[correctZoneId].name} was right. Winners: ${winnersCount}`);
+    console.log(`✅ Verdict: Zone ${targetZone?.name || `Zone ${correctZoneId}`} was right. Winners: ${winnersCount}`);
 
     // 3. 延遲後進入 RESULT_DISPLAY
     resultTimeout = setTimeout(() => {
