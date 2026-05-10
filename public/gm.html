@@ -328,6 +328,9 @@
                 <button class="btn btn-secondary" onclick="sendCommand('add-time')">
                     ⏱ 加時 10 秒
                 </button>
+                <button class="btn btn-warning" onclick="openLeaderboard()">
+                    🏆 查看排行榜
+                </button>
             </div>
         </div>
 
@@ -476,6 +479,10 @@
             const time = new Date().toLocaleTimeString('zh-TW');
             el.innerHTML += `<div class="log-entry ${type}">[${time}] ${msg}</div>`;
             el.scrollTop = el.scrollHeight;
+        }
+
+        function openLeaderboard() {
+            window.open('/leaderboard.html', '_blank', 'width=900,height=700,scrollbars=yes');
         }
 
         async function applyCustomTime() {
