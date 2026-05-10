@@ -8,6 +8,10 @@ const app = express();
 const server = http.createServer(app);
 const io = socketIo(server);
 
+// Enable JSON body parsing for API requests
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+
 const PORT = process.env.PORT || 3000;
 const QUESTIONS_PATH = path.join(__dirname, 'data', 'questions.json');
 
