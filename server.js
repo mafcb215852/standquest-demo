@@ -177,19 +177,19 @@ function handleTimerEnd() {
                            player.y <= targetZone.y + targetZone.height;
             
             if (inZone) {
-                // 在正確區域：隱藏積分保留
-                player.score = (player.hiddenScore || 0) + 10;
+                // 在正確區域：隱藏積分保留，累加到總分
+                player.score = (player.score || 0) + (player.hiddenScore || 0) + 10;
                 winnersCount++;
             } else {
-                // 跑出正確區域：隱藏積分除以 2
-                player.score = Math.floor((player.hiddenScore || 0) / 2) + 10;
+                // 跑出正確區域：隱藏積分除以 2，累加到總分
+                player.score = (player.score || 0) + Math.floor((player.hiddenScore || 0) / 2) + 10;
             }
         });
     } else {
         console.warn(`⚠️ correctIndex ${correctZoneId} 超出動態 zones 範圍 (${getZonesForQuestion(currentQ).length} 個區域)，無法評分`);
         // 即使 zones 無效，仍然給所有玩家 +10
         Object.values(players).forEach(player => {
-            player.score = (player.hiddenScore || 0) + 10;
+            player.score = (player.score || 0) + (player.hiddenScore || 0) + 10;
         });
     }
 
@@ -198,6 +198,18 @@ function handleTimerEnd() {
         correctIndex: correctZoneId,
         winnersCount: winnersCount
     });
+    
+    // 記錄每回合分數歷史
+    Object.values(players).forEach(player => {
+        if (!player.roundHistory) player.roundHistory = [];
+        player.roundHistory.push({
+            round: currentQuestionIndex + 1,
+            question: currentQ.questionText,
+            hiddenScore: player.hiddenScore || 0,
+            roundScore: player.score
+        });
+    });
+    
     io.emit('update_players', Object.values(players));
 
     console.log(`✅ Verdict: Zone ${targetZone?.name || `Zone ${correctZoneId}`} was right. Winners: ${winnersCount}`);

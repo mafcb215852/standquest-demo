@@ -836,12 +836,19 @@
                 return;
             }
             const sorted = [...players].sort((a, b) => (b.score || 0) - (a.score || 0));
-            el.innerHTML = sorted.map(p => `
+            el.innerHTML = sorted.map(p => {
+                const history = (p.roundHistory || []).map((r, i) => 
+                    `<div style="font-size: 11px; color: #8888aa; margin-left: 10px;">回合 ${i + 1}: ${r.hiddenScore} 隱藏分 → ${r.roundScore} 回合分</div>`
+                ).join('');
+                return `
                 <div class="player-item">
-                    <span class="name">${p.nickname}</span>
+                    <div>
+                        <span class="name">${p.nickname}</span>
+                        ${history}
+                    </div>
                     <span class="score">${p.score || 0} 分</span>
                 </div>
-            `).join('');
+            `}).join('');
         }
 
         function updateButtons() {
