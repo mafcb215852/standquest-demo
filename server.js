@@ -122,12 +122,15 @@ function handleTimerEnd() {
 
     console.log(`✅ Verdict: Zone ${ZONES[correctZoneId].name} was right. Winners: ${winnersCount}`);
 
-    // 3. Transition to RESULT_DISPLAY, then auto-advance
-    gameState = 'RESULT_DISPLAY';
-    broadcastGMStatus();
+    // 3. 延遲後進入 RESULT_DISPLAY
     resultTimeout = setTimeout(() => {
-        startNextQuestion();
-    }, 4000); 
+        gameState = 'RESULT_DISPLAY';
+        broadcastGMStatus();
+        // 在 RESULT_DISPLAY 停留 4 秒後自動下一題
+        setTimeout(() => {
+            startNextQuestion();
+        }, 4000);
+    }, 3000);
 }
 
 // --- Initialize ---
