@@ -210,6 +210,9 @@ function draw() {
     } else if (gameState === 'LOBBY') {
         ctx.fillStyle = 'rgba(0, 0, 0, 0.3)';
         ctx.fillRect(0, 0, canvas.width, canvas.height);
+    } else if (gameState === 'PAUSED') {
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
     }
 
     // ==================== 繪製答題區域 ====================
@@ -281,6 +284,16 @@ function draw() {
         ctx.font = 'bold 60px Arial';
         ctx.textAlign = 'center';
         ctx.fillText("TIME'S UP!", 400, 300);
+    } else if (gameState === 'PAUSED') {
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.6)';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.fillStyle = '#ffcc00';
+        ctx.font = 'bold 72px Arial';
+        ctx.textAlign = 'center';
+        ctx.fillText('⏸ 暫停中', 400, 280);
+        ctx.font = 'bold 24px Arial';
+        ctx.fillStyle = '#cccccc';
+        ctx.fillText('等待 GM 繼續...', 400, 340);
     }
 }
 
