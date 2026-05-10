@@ -361,9 +361,13 @@ app.post('/api/gm/reorder', (req, res) => {
     if (currentQuestionIndex >= questions.length) {
         currentQuestionIndex = -1;
     }
-    // 寫入檔案持久化
-    fs.writeFileSync(QUESTIONS_PATH, JSON.stringify(questions, null, 2));
-    console.log(`🔄 Questions reordered: ${newOrder.join(' → ')}`);
+    // 寫入檔案持久化（Render ephemeral filesystem 可能不可寫，容錯）
+    try {
+        fs.writeFileSync(QUESTIONS_PATH, JSON.stringify(questions, null, 2));
+        console.log(`🔄 Questions reordered: ${newOrder.join(' → ')}`);
+    } catch (e) {
+        console.warn(`⚠️ 寫入 questions.json 失敗（可能為 Render ephemeral FS）: ${e.message}`);
+    }
     broadcastGMStatus();
     res.json({ message: '題目順序已更新', questions: questions.map(q => ({ id: q.id, questionText: q.questionText })) });
 });
