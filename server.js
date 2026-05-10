@@ -376,6 +376,101 @@ app.post('/api/gm/reorder', (req, res) => {
     res.json({ message: '題目順序已更新', questions: questions.map(q => ({ id: q.id, questionText: q.questionText })) });
 });
 
+// POST /api/gm/add-question — 新增題目
+app.post('/api/gm/add-question', (req, res) => {
+    const q = req.body;
+    if (!q || !q.questionText || !q.options || !Array.isArray(q.options) || q.options.length < 2 || q.options.length > 5) {
+        return res.status(400).json({ message: '題目格式錯誤：需要 questionText 和 2-5 個 options' });
+    }
+    if (q.correctIndex === undefined || q.correctIndex < 0 || q.correctIndex >= q.options.length) {
+        return res.status(400).json({ message: 'correctIndex 必須是有效選項索引' });
+    }
+    // 自動產生 ID
+    const newId = 'q_' + Date.now();
+    const newQuestion = {
+        id: newId,
+        questionText: q.questionText,
+        options: q.options,
+        correctIndex: q.correctIndex,
+        timeLimit: q.timeLimit || 15
+    };
+    questions.push(newQuestion);
+    // 寫入檔案持久化
+    try {
+        fs.writeFileSync(QUESTIONS_PATH, JSON.stringify(questions, null, 2));
+    } catch (e) {
+        console.warn(`⚠️ 寫入 questions.json 失敗: ${e.message}`);
+    }
+    console.log(`➕ 新增題目: ${newId} - ${newQuestion.questionText}`);
+    broadcastGMStatus();
+    res.json({ message: '題目新增成功', question: newQuestion, total: questions.length });
+});
+
+// POST /api/gm/update-question — 更新題目
+app.post('/api/gm/update-question', (req, res) => {
+    const { id, ...updates } = req.body;
+    if (!id) {
+        return res.status(400).json({ message: '缺少題目 ID' });
+    }
+    const idx = questions.findIndex(q => q.id === id);
+    if (idx === -1) {
+        return res.status(404).json({ message: '題目不存在' });
+    }
+    // 驗證選項
+    if (updates.options && (updates.options.length < 2 || updates.options.length > 5)) {
+        return res.status(400).json({ message: '選項必須有 2-5 個' });
+    }
+    // 驗證 correctIndex
+    if (updates.correctIndex !== undefined && (updates.correctIndex < 0 || updates.correctIndex >= (updates.options?.length || questions[idx].options.length))) {
+        return res.status(400).json({ message: 'correctIndex 無效' });
+    }
+    // 合併更新
+    questions[idx] = { ...questions[idx], ...updates };
+    if (updates.correctIndex !== undefined) {
+        questions[idx].correctIndex = updates.correctIndex;
+    }
+    // 寫入檔案持久化
+    try {
+        fs.writeFileSync(QUESTIONS_PATH, JSON.stringify(questions, null, 2));
+    } catch (e) {
+        console.warn(`⚠️ 寫入 questions.json 失敗: ${e.message}`);
+    }
+    console.log(`✏️ 更新題目: ${id}`);
+    broadcastGMStatus();
+    res.json({ message: '題目更新成功', question: questions[idx] });
+});
+
+// POST /api/gm/delete-question — 刪除題目
+app.post('/api/gm/delete-question', (req, res) => {
+    const { id } = req.body;
+    if (!id) {
+        return res.status(400).json({ message: '缺少題目 ID' });
+    }
+    const idx = questions.findIndex(q => q.id === id);
+    if (idx === -1) {
+        return res.status(404).json({ message: '題目不存在' });
+    }
+    if (questions.length <= 1) {
+        return res.status(400).json({ message: '至少需要保留一題' });
+    }
+    const deleted = questions.splice(idx, 1)[0];
+    // 如果刪除的是目前題目，重置
+    if (currentQuestionIndex === idx) {
+        currentQuestionIndex = -1;
+    } else if (currentQuestionIndex > idx) {
+        currentQuestionIndex--;
+    }
+    // 寫入檔案持久化
+    try {
+        fs.writeFileSync(QUESTIONS_PATH, JSON.stringify(questions, null, 2));
+    } catch (e) {
+        console.warn(`⚠️ 寫入 questions.json 失敗: ${e.message}`);
+    }
+    console.log(`❌ 刪除題目: ${deleted.id} - ${deleted.questionText}`);
+    broadcastGMStatus();
+    res.json({ message: '題目刪除成功', question: deleted, total: questions.length });
+});
+
 // --- Legacy API (backward compatibility) ---
 // API for GM (Admin Control)
 app.get('/api/game/next', (req, res) => {

@@ -404,6 +404,177 @@
             background: linear-gradient(135deg, #4b5563, #6b7280);
             color: white;
         }
+        /* 題目編輯器樣式 */
+        .editor-toolbar {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 16px;
+            flex-wrap: wrap;
+        }
+        .editor-toolbar .btn {
+            font-size: 13px;
+            padding: 8px 16px;
+        }
+        .question-editor-list {
+            max-height: 400px;
+            overflow-y: auto;
+            margin-bottom: 16px;
+        }
+        .question-editor-item {
+            background: #0e0e22;
+            border: 2px solid #2a2a5a;
+            border-radius: 10px;
+            padding: 14px 16px;
+            margin-bottom: 10px;
+            transition: all 0.15s;
+        }
+        .question-editor-item:hover { border-color: #6c3baa; }
+        .question-editor-item.current-q { border-color: #fbbf24; background: #1a1a0a; }
+        .question-editor-item.passed-q { border-color: #4ade80; opacity: 0.7; }
+        .qe-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+        .qe-order {
+            background: #2a2a5a;
+            color: #c9a0ff;
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: bold;
+            flex-shrink: 0;
+        }
+        .qe-order.current { background: #fbbf24; color: #000; }
+        .qe-order.passed { background: #4ade80; color: #000; }
+        .qe-qtext {
+            flex: 1;
+            font-size: 14px;
+            color: #e0e0e0;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .qe-actions {
+            display: flex;
+            gap: 6px;
+            flex-shrink: 0;
+        }
+        .qe-actions .btn {
+            font-size: 12px;
+            padding: 4px 10px;
+        }
+        .qe-options {
+            margin-top: 8px;
+            padding-left: 38px;
+        }
+        .qe-option {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 4px;
+            font-size: 13px;
+        }
+        .qe-option input[type="radio"] { cursor: pointer; }
+        .qe-option input[type="text"] {
+            flex: 1;
+            background: #1a1a3e;
+            border: 1px solid #2a2a5a;
+            color: #e0e0e0;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 13px;
+        }
+        .qe-option input[type="text"]:focus { border-color: #6c3baa; outline: none; }
+        .qe-option .correct-mark { color: #4ade80; font-weight: bold; }
+        .qe-time {
+            color: #8888aa;
+            font-size: 12px;
+            margin-left: 38px;
+        }
+        /* 新增/編輯題目表單 */
+        .question-form {
+            background: #0e0e22;
+            border: 2px solid #6c3baa;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 16px;
+        }
+        .question-form h3 {
+            color: #c9a0ff;
+            margin-bottom: 12px;
+            font-size: 16px;
+        }
+        .form-group {
+            margin-bottom: 12px;
+        }
+        .form-group label {
+            display: block;
+            color: #8888aa;
+            font-size: 13px;
+            margin-bottom: 4px;
+        }
+        .form-group input[type="text"],
+        .form-group input[type="number"] {
+            width: 100%;
+            background: #1a1a3e;
+            border: 1px solid #2a2a5a;
+            color: #e0e0e0;
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+        .form-group input:focus { border-color: #6c3baa; outline: none; }
+        .form-options { margin-top: 8px; }
+        .form-option {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 6px;
+        }
+        .form-option input[type="radio"] { cursor: pointer; }
+        .form-option input[type="text"] {
+            flex: 1;
+            background: #1a1a3e;
+            border: 1px solid #2a2a5a;
+            color: #e0e0e0;
+            padding: 6px 10px;
+            border-radius: 4px;
+            font-size: 13px;
+        }
+        .form-option input[type="text"]:focus { border-color: #6c3baa; outline: none; }
+        .form-option .btn {
+            font-size: 16px;
+            padding: 4px 10px;
+            min-width: 36px;
+        }
+        .form-row {
+            display: flex;
+            gap: 12px;
+            align-items: flex-end;
+        }
+        .form-row .form-group { flex: 1; }
+        .form-actions {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+            margin-top: 12px;
+        }
+        .form-hint {
+            color: #6666aa;
+            font-size: 12px;
+            margin-top: 4px;
+        }
+        .empty-list {
+            text-align: center;
+            padding: 40px 20px;
+            color: #6666aa;
+        }
     </style>
 </head>
 <body>
@@ -486,8 +657,8 @@
                 <button class="btn btn-warning" onclick="openLeaderboard()">
                     🏆 查看排行榜
                 </button>
-                <button class="btn btn-primary" onclick="openReorderModal()">
-                    🔀 題目排序
+                <button class="btn btn-primary" onclick="openQuestionEditor()">
+                    📝 題目編輯
                 </button>
             </div>
         </div>
@@ -518,22 +689,54 @@
         </div>
     </div>
 
-    <!-- 題目排序 Modal -->
-    <div class="modal-overlay" id="reorder-modal">
-        <div class="modal-container">
+    <!-- 題目編輯 Modal -->
+    <div class="modal-overlay" id="question-editor-modal">
+        <div class="modal-container" style="max-width: 700px;">
             <div class="modal-header">
-                <h2>📋 題目排序</h2>
-                <button class="modal-close" onclick="closeReorderModal()">✕</button>
+                <h2>📝 題目編輯</h2>
+                <button class="modal-close" onclick="closeQuestionEditor()">✕</button>
             </div>
             <div class="modal-body">
                 <div class="modal-hint">
-                    🖱️ 拖曳題目卡片調整順序 · 綠色 = 已過 · 黃色 = 目前題目 · 藍色 = 尚未進行
+                    📋 題目來源於 questions.json · 編輯後即時套用 · 選項可選 2-5 個
                 </div>
-                <div id="reorder-list"></div>
+
+                <!-- 新增/編輯表單 -->
+                <div id="question-form" class="question-form" style="display:none;">
+                    <h3 id="form-title">➕ 新增題目</h3>
+                    <div class="form-group">
+                        <label>題目內容</label>
+                        <input type="text" id="form-qtext" placeholder="輸入題目...">
+                    </div>
+                    <div class="form-group">
+                        <label>選項（選擇正確答案的圓圈）</label>
+                        <div id="form-options" class="form-options"></div>
+                        <div style="margin-top: 8px;">
+                            <button class="btn btn-secondary" onclick="addFormOption()" style="font-size: 12px; padding: 4px 12px;">＋ 新增選項</button>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>計時（秒）</label>
+                            <input type="number" id="form-time" value="15" min="3" max="120">
+                        </div>
+                    </div>
+                    <div class="form-actions">
+                        <button class="btn-modal btn-modal-cancel" onclick="cancelEdit()">取消</button>
+                        <button class="btn-modal btn-modal-save" onclick="saveQuestion()">💾 儲存</button>
+                    </div>
+                </div>
+
+                <!-- 題目列表 -->
+                <div class="editor-toolbar">
+                    <button class="btn btn-success" onclick="showAddForm()">➕ 新增題目</button>
+                    <button class="btn btn-secondary" onclick="saveAllQuestions()">💾 儲存全部</button>
+                    <button class="btn btn-warning" onclick="resetForm()">↩ 恢復原始</button>
+                </div>
+                <div id="question-editor-list" class="question-editor-list"></div>
             </div>
             <div class="modal-footer">
-                <button class="btn-modal btn-modal-cancel" onclick="closeReorderModal()">取消</button>
-                <button class="btn-modal btn-modal-save" onclick="saveReorder()">💾 儲存排序</button>
+                <button class="btn-modal btn-modal-cancel" onclick="closeQuestionEditor()">關閉</button>
             </div>
         </div>
     </div>
@@ -704,30 +907,41 @@
         // 初始載入
         updateUI();
 
-        // --- 題目排序 Modal ---
+        // --- 題目編輯 Modal ---
         let allQuestions = [];
-        let dragSrcEl = null;
+        let originalQuestions = [];
+        let editingId = null;
+        let formOptionCount = 0;
 
-        async function openReorderModal() {
+        async function openQuestionEditor() {
             try {
                 const resp = await fetch(`${API_BASE}/api/gm/questions`);
                 const data = await resp.json();
-                allQuestions = data.questions;
-                renderReorderList();
-                document.getElementById('reorder-modal').classList.add('active');
+                allQuestions = JSON.parse(JSON.stringify(data.questions));
+                originalQuestions = JSON.parse(JSON.stringify(data.questions));
+                renderQuestionEditorList();
+                hideForm();
+                document.getElementById('question-editor-modal').classList.add('active');
             } catch (err) {
                 addLog(`載入題目列表失敗: ${err.message}`, 'error');
             }
         }
 
-        function closeReorderModal() {
-            document.getElementById('reorder-modal').classList.remove('active');
+        function closeQuestionEditor() {
+            document.getElementById('question-editor-modal').classList.remove('active');
             allQuestions = [];
+            originalQuestions = [];
+            editingId = null;
         }
 
-        function renderReorderList() {
-            const container = document.getElementById('reorder-list');
+        function renderQuestionEditorList() {
+            const container = document.getElementById('question-editor-list');
             const currentIdx = currentQuestionIndex;
+
+            if (allQuestions.length === 0) {
+                container.innerHTML = '<div class="empty-list">尚無題目，請點擊「新增題目」</div>';
+                return;
+            }
 
             container.innerHTML = allQuestions.map((q, i) => {
                 let statusClass = '';
@@ -747,79 +961,250 @@
                     labelText = '目前';
                 }
 
+                const opts = (q.options || []).map((o, j) => {
+                    const correct = j === q.correctIndex;
+                    return `<div class="qe-option">
+                        <input type="radio" name="correct-${q.id}" ${correct ? 'checked' : ''} disabled>
+                        <span class="${correct ? 'correct-mark' : ''}">${String.fromCharCode(65 + j)})</span>
+                        <span>${o}</span>
+                    </div>`;
+                }).join('');
+
                 return `
-                    <div class="question-drag-item ${statusClass}" 
-                         draggable="true"
-                         data-id="${q.id}" 
-                         data-index="${i}">
-                        <span class="drag-handle">⠿</span>
-                        <span class="q-order ${orderClass}">${i + 1}</span>
-                        <span class="q-preview-text">${q.questionText}</span>
-                        <span class="q-label ${labelClass}">${labelText}</span>
+                    <div class="question-editor-item ${statusClass}" data-id="${q.id}" data-index="${i}">
+                        <div class="qe-header">
+                            <span class="qe-order ${orderClass}">${i + 1}</span>
+                            <span class="qe-qtext">${q.questionText}</span>
+                            <span class="q-label ${labelClass}">${labelText}</span>
+                            <div class="qe-actions">
+                                <button class="btn btn-primary" onclick="showEditForm('${q.id}')">✏️ 編輯</button>
+                                <button class="btn btn-danger" onclick="deleteQuestion('${q.id}')">🗑</button>
+                            </div>
+                        </div>
+                        <div class="qe-options">${opts}</div>
+                        <div class="qe-time">⏱ ${q.timeLimit || 15} 秒</div>
                     </div>
                 `;
             }).join('');
-
-            // 綁定拖放事件
-            container.querySelectorAll('.question-drag-item').forEach(item => {
-                item.addEventListener('dragstart', handleDragStart);
-                item.addEventListener('dragover', handleDragOver);
-                item.addEventListener('dragenter', handleDragEnter);
-                item.addEventListener('dragleave', handleDragLeave);
-                item.addEventListener('drop', handleDrop);
-                item.addEventListener('dragend', handleDragEnd);
-            });
         }
 
-        function handleDragStart(e) {
-            dragSrcEl = this;
-            this.classList.add('dragging');
-            e.dataTransfer.effectAllowed = 'move';
-            e.dataTransfer.setData('text/plain', this.dataset.id);
+        function hideForm() {
+            document.getElementById('question-form').style.display = 'none';
         }
 
-        function handleDragOver(e) {
-            e.preventDefault();
-            e.dataTransfer.dropEffect = 'move';
+        function showForm(title) {
+            document.getElementById('form-title').textContent = title;
+            document.getElementById('question-form').style.display = 'block';
+            document.getElementById('question-form').scrollIntoView({ behavior: 'smooth' });
         }
 
-        function handleDragEnter(e) {
-            e.preventDefault();
-            this.classList.add('drag-over');
+        function showAddForm() {
+            editingId = null;
+            document.getElementById('form-title').textContent = '➕ 新增題目';
+            document.getElementById('form-qtext').value = '';
+            document.getElementById('form-time').value = 15;
+            formOptionCount = 2;
+            renderFormOptions();
+            showForm('➕ 新增題目');
         }
 
-        function handleDragLeave(e) {
-            this.classList.remove('drag-over');
+        function showEditForm(id) {
+            editingId = id;
+            const q = allQuestions.find(q => q.id === id);
+            if (!q) return;
+            document.getElementById('form-title').textContent = '✏️ 編輯題目';
+            document.getElementById('form-qtext').value = q.questionText;
+            document.getElementById('form-time').value = q.timeLimit || 15;
+            formOptionCount = q.options.length;
+            renderFormOptions(q.options, q.correctIndex);
+            showForm('✏️ 編輯題目');
         }
 
-        function handleDrop(e) {
-            e.preventDefault();
-            e.stopPropagation();
-            this.classList.remove('drag-over');
-
-            if (dragSrcEl !== this) {
-                const srcId = dragSrcEl.dataset.id;
-                const destId = this.dataset.id;
-                const srcIdx = allQuestions.findIndex(q => q.id === srcId);
-                const destIdx = allQuestions.findIndex(q => q.id === destId);
-
-                // 交換陣列中的位置
-                const [moved] = allQuestions.splice(srcIdx, 1);
-                allQuestions.splice(destIdx, 0, moved);
-
-                renderReorderList();
+        function renderFormOptions(options, correctIdx) {
+            const container = document.getElementById('form-options');
+            const opts = options || [];
+            let html = '';
+            for (let i = 0; i < formOptionCount; i++) {
+                const val = opts[i] || '';
+                const checked = (correctIdx !== undefined && i === correctIdx) ? 'checked' : '';
+                html += `
+                    <div class="form-option">
+                        <input type="radio" name="correct-opt" ${checked ? 'checked' : ''} onchange="updateCorrectOpt(${i})">
+                        <span style="color:#8888aa; min-width:20px;">${String.fromCharCode(65 + i)})</span>
+                        <input type="text" value="${val}" placeholder="選項 ${String.fromCharCode(65 + i)}" data-opt-idx="${i}">
+                        ${formOptionCount > 2 ? `<button class="btn btn-danger" onclick="removeFormOption(${i})" title="刪除">✕</button>` : ''}
+                    </div>
+                `;
             }
-            return false;
+            container.innerHTML = html;
         }
 
-        function handleDragEnd(e) {
-            this.classList.remove('dragging');
-            document.querySelectorAll('.question-drag-item').forEach(item => {
-                item.classList.remove('drag-over');
-            });
+        function updateCorrectOpt(idx) {
+            // radio 自動處理
         }
 
-        async function saveReorder() {
+        function addFormOption() {
+            if (formOptionCount >= 5) {
+                addLog('最多只能有 5 個選項', 'error');
+                return;
+            }
+            formOptionCount++;
+            const currentQ = editingId ? allQuestions.find(q => q.id === editingId) : null;
+            const opts = currentQ ? [...currentQ.options] : [];
+            const correctIdx = currentQ ? currentQ.correctIndex : 0;
+            renderFormOptions(opts, correctIdx);
+        }
+
+        function removeFormOption(idx) {
+            if (formOptionCount <= 2) {
+                addLog('至少需要 2 個選項', 'error');
+                return;
+            }
+            formOptionCount--;
+            const currentQ = editingId ? allQuestions.find(q => q.id === editingId) : null;
+            const opts = currentQ ? [...currentQ.options] : [];
+            const correctIdx = currentQ ? currentQ.correctIndex : 0;
+            renderFormOptions(opts, correctIdx);
+        }
+
+        function cancelEdit() {
+            hideForm();
+            editingId = null;
+        }
+
+        function saveQuestion() {
+            const qtext = document.getElementById('form-qtext').value.trim();
+            const timeLimit = parseInt(document.getElementById('form-time').value) || 15;
+            const optInputs = document.querySelectorAll('#form-options input[type="text"]');
+            const options = Array.from(optInputs).map(inp => inp.value.trim());
+            const correctRadio = document.querySelector('#form-options input[name="correct-opt"]:checked');
+            const correctIndex = correctRadio ? parseInt(correctRadio.dataset.optIdx || correctRadio.getAttribute('data-opt-idx')) : 0;
+
+            if (!qtext) {
+                addLog('請輸入題目內容', 'error');
+                return;
+            }
+            if (options.some(o => !o)) {
+                addLog('所有選項都不可為空', 'error');
+                return;
+            }
+
+            if (editingId) {
+                const idx = allQuestions.findIndex(q => q.id === editingId);
+                if (idx === -1) {
+                    addLog('題目不存在', 'error');
+                    return;
+                }
+                allQuestions[idx].questionText = qtext;
+                allQuestions[idx].options = options;
+                allQuestions[idx].correctIndex = correctIndex;
+                allQuestions[idx].timeLimit = timeLimit;
+                addLog(`題目已更新: ${qtext.substring(0, 30)}...`, 'success');
+            } else {
+                const newQ = {
+                    id: 'q_' + Date.now(),
+                    questionText: qtext,
+                    options: options,
+                    correctIndex: correctIndex,
+                    timeLimit: timeLimit
+                };
+                allQuestions.push(newQ);
+                addLog(`題目已新增: ${qtext.substring(0, 30)}...`, 'success');
+            }
+
+            renderQuestionEditorList();
+            hideForm();
+            editingId = null;
+        }
+
+        async function saveAllQuestions() {
+            // 找出被修改的題目
+            const modified = [];
+            for (let i = 0; i < allQuestions.length; i++) {
+                const orig = originalQuestions.find(o => o.id === allQuestions[i].id);
+                if (!orig) continue;
+                const a = allQuestions[i];
+                if (a.questionText !== orig.questionText ||
+                    JSON.stringify(a.options) !== JSON.stringify(orig.options) ||
+                    a.correctIndex !== orig.correctIndex ||
+                    a.timeLimit !== orig.timeLimit) {
+                    modified.push(a);
+                }
+            }
+
+            // 找出新增的題目
+            const added = allQuestions.filter(a => !originalQuestions.find(o => o.id === a.id));
+
+            // 找出刪除的題目
+            const deleted = originalQuestions.filter(o => !allQuestions.find(a => a.id === o.id));
+
+            let logMsg = '';
+
+            // 先處理刪除
+            for (const q of deleted) {
+                try {
+                    const resp = await fetch(`${API_BASE}/api/gm/delete-question`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ id: q.id })
+                    });
+                    const data = await resp.json();
+                    if (resp.ok) {
+                        logMsg += `已刪除: ${q.questionText.substring(0, 20)}...\n`;
+                    }
+                } catch (err) {
+                    logMsg += `刪除失敗 ${q.id}: ${err.message}\n`;
+                }
+            }
+
+            // 再處理新增
+            for (const q of added) {
+                try {
+                    const resp = await fetch(`${API_BASE}/api/gm/add-question`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            questionText: q.questionText,
+                            options: q.options,
+                            correctIndex: q.correctIndex,
+                            timeLimit: q.timeLimit
+                        })
+                    });
+                    const data = await resp.json();
+                    if (resp.ok) {
+                        // 更新本地 ID 為伺服器產生的 ID
+                        q.id = data.question.id;
+                        logMsg += `已新增: ${q.questionText.substring(0, 20)}...\n`;
+                    }
+                } catch (err) {
+                    logMsg += `新增失敗 ${q.questionText}: ${err.message}\n`;
+                }
+            }
+
+            // 處理修改
+            for (const q of modified) {
+                try {
+                    const resp = await fetch(`${API_BASE}/api/gm/update-question`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            id: q.id,
+                            questionText: q.questionText,
+                            options: q.options,
+                            correctIndex: q.correctIndex,
+                            timeLimit: q.timeLimit
+                        })
+                    });
+                    const data = await resp.json();
+                    if (resp.ok) {
+                        logMsg += `已更新: ${q.questionText.substring(0, 20)}...\n`;
+                    }
+                } catch (err) {
+                    logMsg += `更新失敗 ${q.id}: ${err.message}\n`;
+                }
+            }
+
+            // 最後處理排序
             const order = allQuestions.map(q => q.id);
             try {
                 const resp = await fetch(`${API_BASE}/api/gm/reorder`, {
@@ -829,15 +1214,57 @@
                 });
                 const data = await resp.json();
                 if (resp.ok) {
-                    addLog(`題目順序已更新 (${data.questions.length} 題)`, 'success');
-                    closeReorderModal();
+                    addLog(`題目已儲存 (${data.questions.length} 題)\n${logMsg || '無變更'}${modified.length > 0 || added.length > 0 || deleted.length > 0 ? '✅' : '未修改任何題目'}`, 'success');
+                    closeQuestionEditor();
                     updateUI();
                 } else {
-                    addLog(`排序失敗: ${data.message}`, 'error');
+                    addLog(`儲存失敗: ${data.message}`, 'error');
                 }
             } catch (err) {
-                addLog(`排序失敗: ${err.message}`, 'error');
+                addLog(`儲存失敗: ${err.message}`, 'error');
             }
+        }
+
+        async function deleteQuestion(id) {
+            if (!confirm('確定要刪除此題目嗎？')) return;
+            try {
+                const resp = await fetch(`${API_BASE}/api/gm/delete-question`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ id: id })
+                });
+                const data = await resp.json();
+                if (resp.ok) {
+                    addLog(`題目已刪除: ${data.question.questionText.substring(0, 30)}...`, 'success');
+                    closeQuestionEditor();
+                    updateUI();
+                } else {
+                    addLog(`刪除失敗: ${data.message}`, 'error');
+                }
+            } catch (err) {
+                addLog(`刪除失敗: ${err.message}`, 'error');
+            }
+        }
+
+        function resetForm() {
+            allQuestions = JSON.parse(JSON.stringify(originalQuestions));
+            renderQuestionEditorList();
+            hideForm();
+            editingId = null;
+            addLog('已恢復原始題目列表', 'info');
+        }
+
+        // 更新按鈕：題目排序 → 題目編輯
+        function updateButtons() {
+            const btnStart = document.getElementById('btn-start');
+            const btnPause = document.getElementById('btn-pause');
+            const btnResume = document.getElementById('btn-resume');
+            const btnNext = document.getElementById('btn-next');
+
+            btnStart.style.display = (gameState === 'LOBBY') ? 'inline-flex' : 'none';
+            btnPause.style.display = (gameState === 'QUESTION_ACTIVE' || gameState === 'FREEZING') ? 'inline-flex' : 'none';
+            btnResume.style.display = (gameState === 'PAUSED') ? 'inline-flex' : 'none';
+            btnNext.style.display = (gameState === 'LOBBY' || gameState === 'PAUSED' || gameState === 'RESULT_DISPLAY') ? 'inline-flex' : 'none';
         }
     </script>
 </body>
