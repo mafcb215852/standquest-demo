@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>StandQuest 分數排行榜</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', 'Microsoft JhengHei', sans-serif;
+            background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
+            color: #e0e0e0;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+        }
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        header h1 {
+            font-size: 36px;
+            color: #ffd700;
+            text-shadow: 0 0 20px rgba(255, 215, 0, 0.5);
+            margin-bottom: 8px;
+        }
+        header p {
+            font-size: 14px;
+            color: #9988bb;
+        }
+        .leaderboard-container {
+            width: 100%;
+            max-width: 600px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .leaderboard-header {
+            background: linear-gradient(135deg, #ffd700, #ffaa00);
+            color: #1a1a2e;
+            padding: 16px 24px;
+            display: grid;
+            grid-template-columns: 60px 1fr 100px;
+            align-items: center;
+            font-weight: bold;
+            font-size: 15px;
+        }
+        .leaderboard-header span:nth-child(1) { text-align: center; }
+        .leaderboard-header span:nth-child(3) { text-align: right; }
+        .player-row {
+            display: grid;
+            grid-template-columns: 60px 1fr 100px;
+            align-items: center;
+            padding: 14px 24px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            transition: background 0.3s;
+        }
+        .player-row:hover {
+            background: rgba(255, 255, 255, 0.05);
+        }
+        .player-row:last-child {
+            border-bottom: none;
+        }
+        .rank {
+            text-align: center;
+            font-size: 20px;
+            font-weight: bold;
+        }
+        .rank-1 { color: #ffd700; text-shadow: 0 0 10px rgba(255, 215, 0, 0.5); }
+        .rank-2 { color: #c0c0c0; text-shadow: 0 0 10px rgba(192, 192, 192, 0.5); }
+        .rank-3 { color: #cd7f32; text-shadow: 0 0 10px rgba(205, 127, 50, 0.5); }
+        .player-name {
+            font-size: 16px;
+            color: #e0e0e0;
+        }
+        .player-score {
+            text-align: right;
+            font-size: 18px;
+            font-weight: bold;
+            color: #4ade80;
+        }
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #6666aa;
+        }
+        .empty-state .icon {
+            font-size: 48px;
+            margin-bottom: 16px;
+        }
+        .game-info {
+            margin-top: 30px;
+            text-align: center;
+            padding: 16px 24px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            width: 100%;
+            max-width: 600px;
+        }
+        .game-info .label {
+            color: #8888aa;
+            font-size: 13px;
+        }
+        .game-info .value {
+            color: #c9a0ff;
+            font-size: 20px;
+            font-weight: bold;
+            margin-top: 4px;
+        }
+        .game-info-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 20px;
+            margin-top: 12px;
+        }
+        .refresh-btn {
+            margin-top: 20px;
+            padding: 12px 32px;
+            background: linear-gradient(135deg, #6c3baa, #8b5cf6);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        .refresh-btn:hover {
+            transform: translateY(-2px);
+        }
+        .gm-link {
+            margin-top: 16px;
+            color: #60a5fa;
+            font-size: 13px;
+        }
+        .gm-link a {
+            color: #60a5fa;
+            text-decoration: underline;
+        }
+        .last-update {
+            margin-top: 12px;
+            color: #6666aa;
+            font-size: 12px;
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>🏆 分數排行榜</h1>
+        <p>StandQuest — 即時累積分數排行</p>
+    </header>
+
+    <div class="leaderboard-container">
+        <div class="leaderboard-header">
+            <span>#</span>
+            <span>玩家名稱</span>
+            <span>分數</span>
+        </div>
+        <div id="leaderboard-body">
+            <div class="empty-state">
+                <div class="icon">🎮</div>
+                <div>等待遊戲開始...</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="game-info">
+        <div class="game-info-grid">
+            <div>
+                <div class="label">遊戲狀態</div>
+                <div class="value" id="game-state">-</div>
+            </div>
+            <div>
+                <div class="label">目前題號</div>
+                <div class="value" id="current-q">-</div>
+            </div>
+            <div>
+                <div class="label">在線玩家</div>
+                <div class="value" id="player-count">0</div>
+            </div>
+        </div>
+        <div class="last-update" id="last-update">最後更新：-</div>
+    </div>
+
+    <button class="refresh-btn" onclick="refreshLeaderboard()">🔄 刷新排行榜</button>
+
+    <div class="gm-link">
+        <a href="/gm.html">← 返回 GM 控制台</a>
+    </div>
+
+    <script>
+        let lastPlayers = [];
+
+        async function refreshLeaderboard() {
+            try {
+                const resp = await fetch('/api/gm/status');
+                const data = await resp.json();
+
+                // 更新遊戲資訊
+                document.getElementById('game-state').textContent = data.state;
+                document.getElementById('current-q').textContent = data.currentQuestionIndex >= 0 ? (data.currentQuestionIndex + 1) : '-';
+                document.getElementById('player-count').textContent = data.playerCount;
+
+                // 更新最後更新時間
+                const now = new Date();
+                document.getElementById('last-update').textContent = '最後更新：' + now.toLocaleTimeString('zh-TW');
+
+                // 排序玩家：分數由高到低
+                const sortedPlayers = [...(data.players || [])].sort((a, b) => (b.score || 0) - (a.score || 0));
+
+                // 渲染排行榜
+                const body = document.getElementById('leaderboard-body');
+                if (sortedPlayers.length === 0) {
+                    body.innerHTML = `
+                        <div class="empty-state">
+                            <div class="icon">🎮</div>
+                            <div>等待遊戲開始...</div>
+                        </div>
+                    `;
+                    return;
+                }
+
+                body.innerHTML = sortedPlayers.map((player, index) => {
+                    const rank = index + 1;
+                    const rankClass = rank <= 3 ? `rank-${rank}` : '';
+                    const rankIcon = rank === 1 ? '🥇' : rank === 2 ? '🥈' : rank === 3 ? '🥉' : rank;
+                    return `
+                        <div class="player-row">
+                            <div class="rank ${rankClass}">${rankIcon}</div>
+                            <div class="player-name">${player.nickname}</div>
+                            <div class="player-score">${player.score || 0}</div>
+                        </div>
+                    `;
+                }).join('');
+
+                lastPlayers = sortedPlayers;
+            } catch (err) {
+                console.error('刷新排行榜失敗:', err);
+            }
+        }
+
+        // 每 3 秒自動刷新
+        setInterval(refreshLeaderboard, 3000);
+
+        // 初始載入
+        refreshLeaderboard();
+    </script>
+</body>
+</html>
