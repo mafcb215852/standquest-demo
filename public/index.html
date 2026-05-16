@@ -2,20 +2,30 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
     <title>StandQuest Demo</title>
     <style>
         body { margin: 0; overflow: hidden; background: #222; font-family: sans-serif; color: white; }
-        canvas { display: block; background: #333; margin: auto; border: 2px solid #555; }
+        canvas { display: block; background: #333; width: 100vw; height: 100vh; object-fit: contain; }
         #ui { position: absolute; top: 10px; left: 10px; pointer-events: none; }
         #login-overlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(0,0,0,0.8); display: flex; justify-content: center; align-items: center;
             z-index: 10;
         }
-        .login-box { background: #444; padding: 20px; border-radius: 10px; text-align: center; }
+        .login-box { background: #444; padding: 20px; border-radius: 10px; text-align: center; max-width: 90vw; }
         input { padding: 10px; font-size: 16px; margin-bottom: 10px; width: 200px; display: block; }
         button { padding: 10px 20px; font-size: 16px; cursor: pointer; background: #28a745; color: white; border: none; border-radius: 5px; }
+
+        /* 手機版調整 */
+        @media (max-width: 768px) {
+            .login-box { padding: 15px; }
+            .login-box h3 { font-size: 20px; }
+            input { width: 80vw; font-size: 18px; }
+            button { width: 80vw; font-size: 18px; }
+        }
 
         /* 虛擬搖桿樣式 */
         #joystick-container {
@@ -46,6 +56,42 @@
             transform: translate(-50%, -50%);
             cursor: pointer;
         }
+
+        /* 手機版搖桿調整 */
+        @media (max-width: 768px) {
+            #joystick-container {
+                bottom: 20px;
+                left: 20px;
+                width: 100px;
+                height: 100px;
+            }
+            #joystick-base {
+                width: 100px;
+                height: 100px;
+            }
+            #joystick-handle {
+                width: 44px;
+                height: 44px;
+            }
+        }
+
+        /* 超小螢幕 */
+        @media (max-width: 380px) {
+            #joystick-container {
+                bottom: 10px;
+                left: 10px;
+                width: 90px;
+                height: 90px;
+            }
+            #joystick-base {
+                width: 90px;
+                height: 90px;
+            }
+            #joystick-handle {
+                width: 40px;
+                height: 40px;
+            }
+        }
     </style>
 </head>
 <body>
@@ -62,7 +108,7 @@
         <div id="player-count">玩家人數: 0</div>
     </div>
 
-    <canvas id="gameCanvas" width="800" height="600"></canvas>
+    <canvas id="gameCanvas"></canvas>
 
     <!-- 虛擬搖桿 -->
     <div id="joystick-container">

@@ -24,6 +24,30 @@ let joystickActive = false;
 let joystickDirection = { x: 0, y: 0 }; // -1 到 1 之間的值
 const JOYSTICK_MAX_RADIUS = 35; // 控制柄最大移動半徑
 
+// Canvas 內部渲染解析度（保持 4:3 比例）
+const CANVAS_INTERNAL_WIDTH = 800;
+const CANVAS_INTERNAL_HEIGHT = 600;
+
+/**
+ * 調整 Canvas 大小以適應螢幕
+ */
+function resizeCanvas() {
+    const dpr = window.devicePixelRatio || 1;
+    canvas.width = CANVAS_INTERNAL_WIDTH;
+    canvas.height = CANVAS_INTERNAL_HEIGHT;
+    // CSS 縮放到全螢幕
+    canvas.style.width = '100vw';
+    canvas.style.height = '100vh';
+    
+    // 更新邊界檢查用的寬高
+    // myPosition 的座標系統維持在 800x600
+}
+
+// 初始調整
+resizeCanvas();
+// 視窗大小改變時重新調整
+window.addEventListener('resize', resizeCanvas);
+
 if (joinBtn) {
     joinBtn.addEventListener('click', function() {
         const nickname = nicknameInput ? nicknameInput.value.trim() : 'Anonymous';
@@ -240,16 +264,16 @@ function update() {
 }
 
 function draw() {
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.clearRect(0, 0, CANVAS_INTERNAL_WIDTH, CANVAS_INTERNAL_HEIGHT);
     if (gameState === 'FREEZING') {
         ctx.fillStyle = 'rgba(255, 0, 0, 0.2)';
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.fillRect(0, 0, CANVAS_INTERNAL_WIDTH, CANVAS_INTERNAL_HEIGHT);
     } else if (gameState === 'LOBBY') {
         ctx.fillStyle = 'rgba(0, 0, 0, 0.3)';
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.fillRect(0, 0, CANVAS_INTERNAL_WIDTH, CANVAS_INTERNAL_HEIGHT);
     } else if (gameState === 'PAUSED') {
         ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.fillRect(0, 0, CANVAS_INTERNAL_WIDTH, CANVAS_INTERNAL_HEIGHT);
     }
 
     // ==================== 繪製答題區域 ====================
@@ -298,39 +322,54 @@ function draw() {
     });
 
     if (currentQuestion) {
+        // 題目框位置：使用相對於內部解析度的座標
+        const titleX = 50;
+        const titleY = 15;
+        const titleW = 700;
+        const titleH = 70;
+        
         ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
-        ctx.fillRect(100, 20, 600, 80);
+        ctx.fillRect(titleX, titleY, titleW, titleH);
         ctx.strokeStyle = '#ffcc00';
         ctx.lineWidth = 3;
-        ctx.strokeRect(100, 20, 600, 80);
+        ctx.strokeRect(titleX, titleY, titleW, titleH);
 
         ctx.fillStyle = 'white';
         ctx.font = 'bold 20px Arial';
         ctx.textAlign = 'center';
-        ctx.fillText(currentQuestion.questionText, 400, 50);
+        // 文字自動換行
+        const questionText = currentQuestion.questionText;
+        const maxCharsPerLine = 35;
+        const lines = [];
+        for (let i = 0; i < questionText.length; i += maxCharsPerLine) {
+            lines.push(questionText.substring(i, i + maxCharsPerLine));
+        }
+        lines.forEach(function(line, idx) {
+            ctx.fillText(line, titleX + titleW / 2, titleY + 25 + idx * 22);
+        });
 
         ctx.fillStyle = (timeLeft <= 5) ? 'red' : '#ffcc00';
         ctx.font = 'bold 18px Arial';
-        ctx.fillText('剩餘時間: ' + timeLeft + 's', 400, 85);
+        ctx.fillText('剩餘時間: ' + timeLeft + 's', titleX + titleW / 2, titleY + titleH - 10);
     }
 
     if (gameState === 'FREEZING') {
         ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.fillRect(0, 0, CANVAS_INTERNAL_WIDTH, CANVAS_INTERNAL_HEIGHT);
         ctx.fillStyle = 'red';
         ctx.font = 'bold 60px Arial';
         ctx.textAlign = 'center';
-        ctx.fillText("TIME'S UP!", 400, 300);
+        ctx.fillText("TIME'S UP!", CANVAS_INTERNAL_WIDTH / 2, CANVAS_INTERNAL_HEIGHT / 2);
     } else if (gameState === 'PAUSED') {
         ctx.fillStyle = 'rgba(0, 0, 0, 0.6)';
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.fillRect(0, 0, CANVAS_INTERNAL_WIDTH, CANVAS_INTERNAL_HEIGHT);
         ctx.fillStyle = '#ffcc00';
         ctx.font = 'bold 72px Arial';
         ctx.textAlign = 'center';
-        ctx.fillText('⏸ 暫停中', 400, 280);
+        ctx.fillText('⏸ 暫停中', CANVAS_INTERNAL_WIDTH / 2, CANVAS_INTERNAL_HEIGHT / 2 - 30);
         ctx.font = 'bold 24px Arial';
         ctx.fillStyle = '#cccccc';
-        ctx.fillText('等待 GM 繼續...', 400, 340);
+        ctx.fillText('等待 GM 繼續...', CANVAS_INTERNAL_WIDTH / 2, CANVAS_INTERNAL_HEIGHT / 2 + 30);
     }
 }
 
