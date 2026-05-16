@@ -84,7 +84,17 @@ if (joinBtn) {
         
         // 請求全螢幕
         requestFullscreen();
+        
+        // 顯示全螢幕切換按鈕
+        const fsBtn = document.getElementById('fullscreen-toggle');
+        if (fsBtn) fsBtn.style.display = 'block';
     });
+}
+
+// 全螢幕切換按鈕點擊事件
+const fsToggleBtn = document.getElementById('fullscreen-toggle');
+if (fsToggleBtn) {
+    fsToggleBtn.addEventListener('click', toggleFullscreen);
 }
 
 /**
@@ -112,13 +122,50 @@ function requestFullscreen() {
 }
 
 // 偵測全螢幕狀態
+let isInFullscreen = false;
 document.addEventListener('fullscreenchange', () => {
-    if (document.fullscreenElement) {
+    isInFullscreen = !!document.fullscreenElement;
+    updateFullscreenBtn();
+    if (isInFullscreen) {
         console.log('✅ 進入全螢幕');
     } else {
         console.log('❌ 離開全螢幕');
     }
 });
+
+/**
+ * 更新全螢幕按鈕圖示
+ */
+function updateFullscreenBtn() {
+    const btn = document.getElementById('fullscreen-toggle');
+    if (!btn) return;
+    if (isInFullscreen) {
+        btn.textContent = '🖥️';
+        btn.title = '退出全螢幕';
+    } else {
+        btn.textContent = '📺';
+        btn.title = '全螢幕';
+    }
+}
+
+/**
+ * 切換全螢幕（玩家手動觸發）
+ */
+function toggleFullscreen() {
+    if (isInFullscreen) {
+        // 退出全螢幕
+        if (document.exitFullscreen) {
+            document.exitFullscreen();
+        } else if (document.webkitExitFullscreen) {
+            document.webkitExitFullscreen();
+        } else if (document.msExitFullscreen) {
+            document.msExitFullscreen();
+        }
+    } else {
+        // 進入全螢幕
+        requestFullscreen();
+    }
+}
 
 // ==================== 虛擬搖桿功能 ====================
 

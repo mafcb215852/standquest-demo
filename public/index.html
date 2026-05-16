@@ -19,6 +19,29 @@
         input { padding: 10px; font-size: 16px; margin-bottom: 10px; width: 200px; display: block; }
         button { padding: 10px 20px; font-size: 16px; cursor: pointer; background: #28a745; color: white; border: none; border-radius: 5px; }
 
+        /* 全螢幕切換按鈕 */
+        #fullscreen-toggle {
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            padding: 8px 14px;
+            font-size: 18px;
+            background: rgba(0, 0, 0, 0.6);
+            color: white;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 8px;
+            cursor: pointer;
+            z-index: 100;
+            display: none;
+            transition: background 0.2s;
+        }
+        #fullscreen-toggle:hover {
+            background: rgba(0, 0, 0, 0.8);
+        }
+        #fullscreen-toggle:active {
+            background: rgba(0, 0, 0, 0.9);
+        }
+
         /* 手機版調整 */
         @media (max-width: 768px) {
             .login-box { padding: 15px; }
@@ -115,6 +138,9 @@
     <div id="ui">
         <div id="player-count">玩家人數: 0</div>
     </div>
+
+    <!-- 全螢幕切換按鈕 -->
+    <button id="fullscreen-toggle">📺</button>
 
     <canvas id="gameCanvas"></canvas>
 
