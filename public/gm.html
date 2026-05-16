@@ -137,19 +137,6 @@
             background: linear-gradient(135deg, #4b5563, #6b7280);
             color: white;
         }
-        .btn-purple {
-            background: linear-gradient(135deg, #7c3aed, #a855f7);
-            color: white;
-        }
-        .btn-purple.active {
-            background: linear-gradient(135deg, #4c1d95, #7c3aed);
-            box-shadow: 0 0 15px rgba(124, 58, 237, 0.5);
-            animation: pulse-purple 1.5s infinite;
-        }
-        @keyframes pulse-purple {
-            0%, 100% { box-shadow: 0 0 15px rgba(124, 58, 237, 0.5); }
-            50% { box-shadow: 0 0 25px rgba(168, 85, 247, 0.8); }
-        }
         .info-row {
             display: flex;
             justify-content: space-between;
@@ -637,9 +624,6 @@
                 <button class="btn btn-primary" id="btn-next" onclick="sendCommand('next')">
                     ➡ 下一題
                 </button>
-                <button class="btn btn-purple" id="btn-auto-next" onclick="toggleAutoNext()">
-                    🔁 自動連播
-                </button>
                 <button class="btn btn-warning" id="btn-pause" onclick="sendCommand('pause')">
                     ⏸ 暫停
                 </button>
@@ -783,80 +767,6 @@
             }
         }
 
-        // ==================== 自動連播功能 ====================
-        let autoNextActive = false;
-        let autoNextTimer = null;
-
-        /**
-         * 切換自動連播開關
-         */
-        async function toggleAutoNext() {
-            const btn = document.getElementById('btn-auto-next');
-            
-            if (autoNextActive) {
-                // 停止自動連播
-                autoNextActive = false;
-                if (autoNextTimer) {
-                    clearTimeout(autoNextTimer);
-                    autoNextTimer = null;
-                }
-                btn.classList.remove('active');
-                btn.innerHTML = '🔁 自動連播';
-                addLog('⏹ 自動連播已停止', 'warning');
-                return;
-            }
-            
-            // 啟動自動連播
-            const canAuto = (gameState === 'LOBBY' || gameState === 'RESULT_DISPLAY' || gameState === 'PAUSED');
-            if (!canAuto) {
-                addLog('⚠️ 無法啟動自動連播：遊戲狀態不合適', 'error');
-                return;
-            }
-            
-            autoNextActive = true;
-            btn.classList.add('active');
-            btn.innerHTML = '⏹ 停止連播';
-            addLog('▶ 自動連播已啟動', 'info');
-            
-            // 如果不在 RESULT_DISPLAY，先觸發下一題
-            if (gameState === 'LOBBY' || gameState === 'PAUSED') {
-                await sendCommand('next');
-                // 等待結果顯示結束後自動進入下一題
-                scheduleAutoNext();
-            } else {
-                scheduleAutoNext();
-            }
-        }
-
-        /**
-         * 排程下一題（在結果顯示結束後）
-         */
-        function scheduleAutoNext() {
-            if (!autoNextActive) return;
-            
-            // 在 RESULT_DISPLAY 狀態等待 3 秒後自動下一題
-            autoNextTimer = setTimeout(async () => {
-                if (!autoNextActive) return;
-                
-                // 檢查是否還有下一題
-                const status = await fetch(`${API_BASE}/api/gm/status`).then(r => r.json());
-                if (status.currentQuestionIndex >= (status.totalQuestions - 1)) {
-                    addLog('🏁 所有題目已完成，自動連播結束', 'info');
-                    autoNextActive = false;
-                    document.getElementById('btn-auto-next').classList.remove('active');
-                    document.getElementById('btn-auto-next').innerHTML = '🔁 自動連播';
-                    return;
-                }
-                
-                await sendCommand('next');
-                // 繼續排程下一題
-                scheduleAutoNext();
-            }, 3000); // 3 秒後自動下一題
-        }
-
-        // 監聽遊戲狀態變化，如果離開 RESULT_DISPLAY 則重新排程
-        let prevGameState = '';
-
         async function updateUI() {
             try {
                 const resp = await fetch(`${API_BASE}/api/gm/status`);
@@ -896,27 +806,6 @@
 
                 // 更新按鈕狀態
                 updateButtons();
-
-                // 狀態變化時的自動連播處理
-                if (prevGameState !== gameState) {
-                    if (gameState === 'RESULT_DISPLAY' && autoNextActive) {
-                        // 進入結果顯示，排程下一題
-                        if (autoNextTimer) clearTimeout(autoNextTimer);
-                        scheduleAutoNext();
-                    } else if ((gameState === 'QUESTION_ACTIVE' || gameState === 'FREEZING') && autoNextActive) {
-                        // 遊戲被手動暫停/強制結束，停止自動連播
-                        autoNextActive = false;
-                        if (autoNextTimer) {
-                            clearTimeout(autoNextTimer);
-                            autoNextTimer = null;
-                        }
-                        const btn = document.getElementById('btn-auto-next');
-                        btn.classList.remove('active');
-                        btn.innerHTML = '🔁 自動連播';
-                        addLog('⚠️ 自動連播已停止（遊戲狀態變更）', 'warning');
-                    }
-                    prevGameState = gameState;
-                }
 
             } catch (err) {
                 addLog(`更新狀態失敗: ${err.message}`, 'error');
@@ -960,6 +849,18 @@
                     <span class="score">${p.score || 0} 分</span>
                 </div>
             `}).join('');
+        }
+
+        function updateButtons() {
+            const btnStart = document.getElementById('btn-start');
+            const btnPause = document.getElementById('btn-pause');
+            const btnResume = document.getElementById('btn-resume');
+            const btnNext = document.getElementById('btn-next');
+
+            btnStart.style.display = (gameState === 'LOBBY') ? 'inline-flex' : 'none';
+            btnPause.style.display = (gameState === 'QUESTION_ACTIVE' || gameState === 'FREEZING') ? 'inline-flex' : 'none';
+            btnResume.style.display = (gameState === 'PAUSED') ? 'inline-flex' : 'none';
+            btnNext.style.display = (gameState === 'LOBBY' || gameState === 'PAUSED' || gameState === 'RESULT_DISPLAY') ? 'inline-flex' : 'none';
         }
 
         function addLog(msg, type = '') {
@@ -1375,19 +1276,11 @@
             const btnPause = document.getElementById('btn-pause');
             const btnResume = document.getElementById('btn-resume');
             const btnNext = document.getElementById('btn-next');
-            const btnAutoNext = document.getElementById('btn-auto-next');
 
             btnStart.style.display = (gameState === 'LOBBY') ? 'inline-flex' : 'none';
             btnPause.style.display = (gameState === 'QUESTION_ACTIVE' || gameState === 'FREEZING') ? 'inline-flex' : 'none';
             btnResume.style.display = (gameState === 'PAUSED') ? 'inline-flex' : 'none';
             btnNext.style.display = (gameState === 'LOBBY' || gameState === 'PAUSED' || gameState === 'RESULT_DISPLAY') ? 'inline-flex' : 'none';
-            
-            // 自動連播按鈕：只在 LOBBY / RESULT_DISPLAY / PAUSED 狀態可啟動
-            if (autoNextActive) {
-                btnAutoNext.style.display = 'inline-flex';
-            } else {
-                btnAutoNext.style.display = (gameState === 'LOBBY' || gameState === 'RESULT_DISPLAY' || gameState === 'PAUSED') ? 'inline-flex' : 'none';
-            }
         }
     </script>
 </body>
