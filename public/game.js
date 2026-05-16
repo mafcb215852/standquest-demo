@@ -81,8 +81,44 @@ if (joinBtn) {
         myId = socket.id;
         socket.emit('player_join', { nickname: nickname });
         if (loginOverlay) loginOverlay.style.display = 'none';
+        
+        // 請求全螢幕
+        requestFullscreen();
     });
 }
+
+/**
+ * 請求全螢幕（支援各種瀏覽器）
+ */
+function requestFullscreen() {
+    const elem = document.documentElement;
+    if (elem.requestFullscreen) {
+        elem.requestFullscreen().catch(err => {
+            console.log('⚠️ 全螢幕請求被拒絕:', err.message);
+        });
+    } else if (elem.webkitRequestFullscreen) {
+        // Safari / iOS
+        elem.webkitRequestFullscreen();
+    } else if (elem.webkitEnterFullscreen) {
+        // iPhone Safari
+        elem.webkitEnterFullscreen();
+    } else if (elem.mozRequestFullScreen) {
+        // Firefox
+        elem.mozRequestFullScreen();
+    } else if (elem.msRequestFullscreen) {
+        // IE / Edge
+        elem.msRequestFullscreen();
+    }
+}
+
+// 偵測全螢幕狀態
+document.addEventListener('fullscreenchange', () => {
+    if (document.fullscreenElement) {
+        console.log('✅ 進入全螢幕');
+    } else {
+        console.log('❌ 離開全螢幕');
+    }
+});
 
 // ==================== 虛擬搖桿功能 ====================
 
