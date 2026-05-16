@@ -24,29 +24,56 @@ let joystickActive = false;
 let joystickDirection = { x: 0, y: 0 }; // -1 到 1 之間的值
 const JOYSTICK_MAX_RADIUS = 35; // 控制柄最大移動半徑
 
-// Canvas 內部渲染解析度（保持 4:3 比例）
-const CANVAS_INTERNAL_WIDTH = 800;
-const CANVAS_INTERNAL_HEIGHT = 600;
+// Canvas 內部渲染解析度
+let CANVAS_INTERNAL_WIDTH = 800;
+let CANVAS_INTERNAL_HEIGHT = 600;
+let isLandscape = false;
+
+/**
+ * 偵測螢幕方向並調整 Canvas
+ */
+function detectOrientation() {
+    const width = window.innerWidth;
+    const height = window.innerHeight;
+    const newIsLandscape = width > height;
+    
+    if (newIsLandscape !== isLandscape) {
+        isLandscape = newIsLandscape;
+        if (isLandscape) {
+            // 橫向：16:9 比例
+            CANVAS_INTERNAL_WIDTH = 960;
+            CANVAS_INTERNAL_HEIGHT = 540;
+            console.log('📱 橫向模式 (landscape)');
+        } else {
+            // 直向：4:3 比例
+            CANVAS_INTERNAL_WIDTH = 800;
+            CANVAS_INTERNAL_HEIGHT = 600;
+            console.log('📱 直向模式 (portrait)');
+        }
+        resizeCanvas();
+    }
+}
 
 /**
  * 調整 Canvas 大小以適應螢幕
  */
 function resizeCanvas() {
     const dpr = window.devicePixelRatio || 1;
-    canvas.width = CANVAS_INTERNAL_WIDTH;
-    canvas.height = CANVAS_INTERNAL_HEIGHT;
+    canvas.width = CANVAS_INTERNAL_WIDTH * dpr;
+    canvas.height = CANVAS_INTERNAL_HEIGHT * dpr;
+    ctx.scale(dpr, dpr);
     // CSS 縮放到全螢幕
     canvas.style.width = '100vw';
     canvas.style.height = '100vh';
-    
-    // 更新邊界檢查用的寬高
-    // myPosition 的座標系統維持在 800x600
 }
+
+// 初始偵測方向
+detectOrientation();
 
 // 初始調整
 resizeCanvas();
 // 視窗大小改變時重新調整
-window.addEventListener('resize', resizeCanvas);
+window.addEventListener('resize', detectOrientation);
 
 if (joinBtn) {
     joinBtn.addEventListener('click', function() {
@@ -209,23 +236,25 @@ socket.on('result_display', function(data) {
         const totalScore = myPlayer.score || 0;
         const inCorrectZone = verdictData.winnersCount > 0;
         
-        // 在畫面上顯示得分
+        // 在畫面上顯示得分（使用相對座標）
+        const boxX = CANVAS_INTERNAL_WIDTH / 2 - 150;
+        const boxY = CANVAS_INTERNAL_HEIGHT / 2 - 75;
         ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
-        ctx.fillRect(250, 200, 300, 150);
+        ctx.fillRect(boxX, boxY, 300, 150);
         ctx.strokeStyle = '#ffcc00';
         ctx.lineWidth = 3;
-        ctx.strokeRect(250, 200, 300, 150);
+        ctx.strokeRect(boxX, boxY, 300, 150);
         
         ctx.fillStyle = '#ffcc00';
         ctx.font = 'bold 28px Arial';
         ctx.textAlign = 'center';
-        ctx.fillText('回合結束！', 400, 240);
+        ctx.fillText('回合結束！', CANVAS_INTERNAL_WIDTH / 2, boxY + 40);
         
         ctx.fillStyle = 'white';
         ctx.font = '20px Arial';
-        ctx.fillText(`隱藏積分: ${hiddenScore}`, 400, 280);
-        ctx.fillText(`基礎分數: +10`, 400, 310);
-        ctx.fillText(`總分: ${totalScore}`, 400, 340);
+        ctx.fillText(`隱藏積分: ${hiddenScore}`, CANVAS_INTERNAL_WIDTH / 2, boxY + 70);
+        ctx.fillText(`基礎分數: +10`, CANVAS_INTERNAL_WIDTH / 2, boxY + 100);
+        ctx.fillText(`總分: ${totalScore}`, CANVAS_INTERNAL_WIDTH / 2, boxY + 130);
     }
 });
 
@@ -252,11 +281,11 @@ function update() {
         moved = true;
     }
 
-    // 邊界檢查
+    // 邊界檢查（使用內部解析度）
     if (myPosition.x < 15) myPosition.x = 15;
     if (myPosition.y < 15) myPosition.y = 15;
-    if (myPosition.x > canvas.width - 15) myPosition.x = canvas.width - 15;
-    if (myPosition.y > canvas.height - 15) myPosition.y = canvas.height - 15;
+    if (myPosition.x > CANVAS_INTERNAL_WIDTH - 15) myPosition.x = CANVAS_INTERNAL_WIDTH - 15;
+    if (myPosition.y > CANVAS_INTERNAL_HEIGHT - 15) myPosition.y = CANVAS_INTERNAL_HEIGHT - 15;
 
     if (moved) {
         socket.emit('player_move', { x: myPosition.x, y: myPosition.y });
